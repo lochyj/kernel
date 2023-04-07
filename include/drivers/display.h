@@ -1,15 +1,17 @@
 #pragma once
 
 #include <stdint.h>
-#include "misc/ports.h"
 
 #define VIDEO_ADDRESS   0xB8000 //* Video memory starts here.
 #define VGA_WIDTH       80      //* 80 x Characters
+#define VGA_HEIGHT      25      //* 25 y Characters
+#define VGA_COLOUR      0x0F    //* White on Black
 
 
-void        set_cursor(uint32_t x, uint32_t y);
-uint16_t    get_cursor();
-void        enable_cursor(uint8_t cursor_start, uint8_t cursor_end);
-void        set_char_at_video_memory(char character, uint16_t offset);
-uint16_t    get_offset(uint32_t x, uint32_t y);
-void        clear_screen();
+void enable_cursor(uint8_t cursor_start, uint8_t cursor_end);
+
+void disable_cursor();
+
+void putc(char c);
+
+void puts(const char* string);

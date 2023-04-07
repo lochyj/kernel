@@ -1,12 +1,12 @@
 #include "system/multiboot.h"
+#include "drivers/display.h"
 
 typedef struct multiboot_header multiboot_header_t;
 
 void kmain(multiboot_header_t* mboot) {
-    char* buffer = (char*)0xB8000;
+    clear_screen();
 
-    buffer[0] = 'E';
-    buffer[2] = 'Z';
+    puts("Hello there!");
 
 
     for(;;);

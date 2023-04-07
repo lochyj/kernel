@@ -4,7 +4,7 @@
 
 # Future: $(shell find . -name '*.c')
 
-C_SOURCES = $(wildcard kernel/*.c kernel/drivers/*.c)
+C_SOURCES = $(wildcard kernel/*.c kernel/drivers/*.c lib/libc/string/*.c)
 ASM_SOURCES = $(wildcard boot/*.asm)
 
 C_OBJS = ${C_SOURCES:.c=.o}
@@ -14,14 +14,12 @@ ASM_OBJS = ${ASM_SOURCES:.asm=.o}
 CFLAGS = -m32 -Wall -O -ffreestanding -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -I . -I ./include/
 ASMFLAGS = -felf32
 
-all: $(C_OBJS) $(ASM_OBJS) link mboot buildiso run clean
+all: $(C_SOURCES) $(ASM_SOURCES) link mboot buildiso run clean
 
-$(C_OBJS): $(C_SOURCES)
-	$(info [c] $@)
+.c.o:
 	gcc $(CFLAGS) -c $< -o $@
 
-$(ASM_OBJS): $(ASM_SOURCES)
-	$(info [asm] $@)
+.asm.o:
 	nasm $(ASMFLAGS) $< -o $@
 
 link:

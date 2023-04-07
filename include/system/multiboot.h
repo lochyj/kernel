@@ -1,3 +1,4 @@
+#pragma once
 /*  multiboot.h - Multiboot header file.  */
 /*  Copyright (C) 1999,2003,2007,2008,2009,2010  Free Software Foundation, Inc.
  *
@@ -194,18 +195,18 @@ struct multiboot_info {
 };
 typedef struct multiboot_info multiboot_info_t;
 
-struct multiboot_mmap_entry {
-    multiboot_uint32_t size;
-    multiboot_uint64_t addr;
-    multiboot_uint64_t len;
-    #define MULTIBOOT_MEMORY_AVAILABLE			1
-    #define MULTIBOOT_MEMORY_RESERVED			2
-    #define MULTIBOOT_MEMORY_ACPI_RECLAIMABLE   3
-    #define MULTIBOOT_MEMORY_NVS                4
-    #define MULTIBOOT_MEMORY_BADRAM             5
-    multiboot_uint32_t type;
-} GRUB_PACKED;
-typedef struct multiboot_mmap_entry multiboot_memory_map_t;
+// struct multiboot_mmap_entry {
+//     multiboot_uint32_t size;
+//     multiboot_uint64_t addr;
+//     multiboot_uint64_t len;
+//     #define MULTIBOOT_MEMORY_AVAILABLE			1
+//     #define MULTIBOOT_MEMORY_RESERVED			2
+//     #define MULTIBOOT_MEMORY_ACPI_RECLAIMABLE   3
+//     #define MULTIBOOT_MEMORY_NVS                4
+//     #define MULTIBOOT_MEMORY_BADRAM             5
+//     multiboot_uint32_t type;
+// } GRUB_PACKED;
+// typedef struct multiboot_mmap_entry multiboot_memory_map_t;
 
 struct multiboot_mod_list {
     multiboot_uint32_t mod_start;
