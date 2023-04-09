@@ -4,23 +4,23 @@
 
 # Future: $(shell find . -name '*.c')
 
-C_SOURCES = $(wildcard kernel/*.c kernel/drivers/*.c lib/libc/string/*.c)
-ASM_SOURCES = $(wildcard boot/*.asm)
+C_SOURCES = $(wildcard kernel/*.c kernel/drivers/*.c lib/libc/string/*.c lib/libc/stdio/*.c kernel/system/gdt/*.c)
+ASM_SOURCES = $(wildcard boot/*.asm kernel/system/gdt/*.asm kernel/system/assemblies/*.asm )
 
 C_OBJS = ${C_SOURCES:.c=.o}
-ASM_OBJS = ${ASM_SOURCES:.asm=.o}
+ASM_OBJS = ${ASM_SOURCES:.asm=.out}
 
 # TODO:  | Build cross-compiler so I dont need this...                                                               | I will still need this
 CFLAGS = -m32 -Wall -O -ffreestanding -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -I . -I ./include/
 ASMFLAGS = -felf32
 
-all: $(C_SOURCES) $(ASM_SOURCES) link mboot buildiso run clean
+all: $(ASM_OBJS) $(C_OBJS) link mboot buildiso run clean
 
-.c.o:
-	gcc $(CFLAGS) -c $< -o $@
-
-.asm.o:
+%.out: %.asm
 	nasm $(ASMFLAGS) $< -o $@
+
+%.o: %.c
+	gcc $(CFLAGS) -c $< -o $@
 
 link:
 	ld -m elf_i386 -T linker.ld $(ASM_OBJS) $(C_OBJS) -o build/kernel.bin
@@ -35,9 +35,10 @@ buildiso:
 	grub2-mkrescue -o build/image/BlinkKernel.iso build/iso
 
 run:
-	qemu-system-i386 -kernel build/kernel.bin
-#	qemu-system-i386 -cdrom build/image/BlinkKernel.iso
+#	qemu-system-i386 -kernel build/kernel.bin
+	qemu-system-i386 -cdrom build/image/BlinkKernel.iso
 
 clean:
 	rm -f $(C_OBJS)
 	rm -f $(ASM_OBJS)
+	rm -f build/kernel.bin

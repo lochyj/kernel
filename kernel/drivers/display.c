@@ -2,137 +2,140 @@
 #include "misc/ports.h"
 #include <string.h>
 
-// The use of unsigned int (uint32_t) is to prevent the offset of the cursor being negative and causing a crash.
+// TODO: fix this abomination
 
-uint32_t x = 0, y = 0;
+unsigned short *textmemptr;
+int attrib = 0x0F;
+int csr_x = 0, csr_y = 0;
 
-void enable_cursor(uint8_t cursor_start, uint8_t cursor_end) {
-	outb(0x3D4, 0x0A);
-	outb(0x3D5, (inb(0x3D5) & 0xC0) | cursor_start);
- 
-	outb(0x3D4, 0x0B);
-	outb(0x3D5, (inb(0x3D5) & 0xE0) | cursor_end);
-}
+/* Scrolls the screen */
+void scroll(void) {
+    unsigned blank, temp;
 
-void disable_cursor() {
-	outb(0x3D4, 0x0A);
-	outb(0x3D5, 0x20);
-}
+    /* A blank is defined as a space... we need to give it
+    *  backcolor too */
+    blank = 0x20 | (attrib << 8);
 
-static void update_cursor(uint32_t x, uint32_t y) {
-	uint16_t pos = y * VGA_WIDTH + x;
+    /* Row 25 is the end, this means we need to scroll up */
+    if(csr_y >= 25) {
+        /* Move the current text chunk that makes up the screen
+        *  back in the buffer by a line */
+        temp = csr_y - 25 + 1;
+        memcpy (textmemptr, textmemptr + temp * 80, (25 - temp) * 80 * 2);
 
-	outb(0x3D4, 0x0F);
-	outb(0x3D5, (uint8_t) (pos & 0xFF));
-	outb(0x3D4, 0x0E);
-	outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
-}
-
-static uint16_t get_cursor_position(void) {
-    uint16_t pos = 0;
-    outb(0x3D4, 0x0F);
-    pos          |= inb(0x3D5);
-    outb(0x3D4, 0x0E);
-    pos          |= ((uint16_t)inb(0x3D5)) << 8;
-    return pos;
-}
-
-static uint16_t get_offset(int x, int y) {
-    return (uint16_t)(x * VGA_WIDTH + y);
-}
-
-static uint16_t scroll_ln(int x, int y) {
-    memcpy(
-        (uint8_t*) (get_offset(0, 1) + 0xB8000),
-        (uint8_t*) (get_offset(0, 0) + 0xB8000),
-        VGA_WIDTH * (VGA_HEIGHT - 1) * 2
-    );
-
-    for (int col = 0; col < VGA_WIDTH; col++) {
-        unsigned char* videoMemory = (unsigned char *) VIDEO_ADDRESS;
-        videoMemory[get_offset(col, VGA_HEIGHT - 1)] = ' ';
-        videoMemory[get_offset(col, VGA_HEIGHT - 1) + 1] = VGA_COLOUR;
+        /* Finally, we set the chunk of memory that occupies
+        *  the last line of text to our 'blank' character */
+        memsetw (textmemptr + (25 - temp) * 80, blank, 80);
+        csr_y = 25 - 1;
     }
-
-    return get_offset(x, y) - 2 * VGA_WIDTH;
 }
 
+/* Updates the hardware cursor: the little blinking line
+*  on the screen under the last character pressed! */
+void move_csr(void) {
+    unsigned temp;
+
+    /* The equation for finding the index in a linear
+    *  chunk of memory can be represented by:
+    *  Index = [(y * width) + x] */
+    temp = csr_y * 80 + csr_x;
+
+    /* This sends a command to indicies 14 and 15 in the
+    *  CRT Control Register of the VGA controller. These
+    *  are the high and low bytes of the index that show
+    *  where the hardware cursor is to be 'blinking'. To
+    *  learn more, you should look up some VGA specific
+    *  programming documents. A great start to graphics:
+    *  http://www.brackeen.com/home/vga */
+    outb(0x3D4, 14);
+    outb(0x3D5, temp >> 8);
+    outb(0x3D4, 15);
+    outb(0x3D5, temp);
+}
+
+/* Clears the screen */
 void clear_screen() {
-    int screen_size = VGA_WIDTH * VGA_HEIGHT;
-    for (int i = 0; i < screen_size; ++i) {
-        unsigned char* videoMemory = (unsigned char *) VIDEO_ADDRESS;
-        videoMemory[i * 2] = ' ';
-        videoMemory[i * 2 + 1] = VGA_COLOUR;
-    }
-    x, y = 0;
-    update_cursor(0, 0);
+    unsigned blank;
+    int i;
+
+    /* Again, we need the 'short' that will be used to
+    *  represent a space with color */
+    blank = 0x20 | (attrib << 8);
+
+    /* Sets the entire screen to spaces in our current
+    *  color */
+    for(i = 0; i < 25; i++)
+        memsetw(textmemptr + i * 80, blank, 80);
+
+    /* Update out virtual cursor, and then move the
+    *  hardware cursor */
+    csr_x = 0;
+    csr_y = 0;
+    move_csr();
 }
 
-/*  Source: https://wiki.osdev.org/Printing_To_Screen
-    VGA Text Mode Colour Table
-    Color number 	Color name
-    0 	            Black
-    1 	            Blue
-    2 	            Green
-    3 	            Cyan
-    4 	            Red
-    5 	            Purple
-    6 	            Brown
-    7 	            Gray
-    8 	            Dark Gray
-    9 	            Light Blue
-    10 || A 	    Light Green
-    11 || B	        Light Cyan
-    12 || C	        Light Red
-    13 || D	        Light Purple
-    14 || E	        Yellow
-    15 || F	        White
-
-    VGA Colour Code: 0xYZ
-    Where Y is the background color
-    And Z is the text color
-    EG: 
-        0x4F is white text on a red background,
-        0x0F is white text on a black background.
-*/
-
+/* Puts a single character on the screen */
 void putc(char c) {
-	if(c & (char)0x00) return;
-	
-	if(c & (char)'\n') {
-		y++;
-		x = 0;
-        update_cursor(x, y);
-		return;
-	}
+    unsigned short *where;
+    unsigned short *tmp;
+    unsigned att = attrib << 8;
 
-    if(c & (char)'\r') {
-		x = 0;
-        update_cursor(x, y);
-		return;
-	}
+    /* Handle a backspace, by moving the cursor back one space */
+    if(c == 0x08) {
+        if(csr_x != 0) csr_x--;
+        tmp = textmemptr + (csr_y * 80 + csr_x);
+        *tmp = ' ' | att;	/* Character AND attributes: color */
+    }
+    /* Handles a tab by incrementing the cursor's x, but only
+    *  to a point that will make it divisible by 8 */
+    else if(c == 0x09) {
+        csr_x = (csr_x + 8) & ~(8 - 1);
+    }
+    /* Handles a 'Carriage Return', which simply brings the
+    *  cursor back to the margin */
+    else if(c == '\r') {
+        csr_x = 0;
+    }
+    /* We handle our newlines the way DOS and the BIOS do: we
+    *  treat it as if a 'CR' was also there, so we bring the
+    *  cursor to the margin and we increment the 'y' value */
+    else if(c == '\n') {
+        csr_x = 0;
+        csr_y++;
+    }
+    /* Any character greater than and including a space, is a
+    *  printable character. The equation for finding the index
+    *  in a linear chunk of memory can be represented by:
+    *  Index = [(y * width) + x] */
+    else if(c >= ' ') {
+        where = textmemptr + (csr_y * 80 + csr_x);
+        *where = c | att;	/* Character AND attributes: color */
+        csr_x++;
+    }
 
-	if (x >= VGA_WIDTH) {
-        if (y >= VGA_HEIGHT) {
-            y = VGA_HEIGHT;
-            x = 0;
-            scroll_ln(x, y);
-        } else {
-            x = 0;
-            y++;
-        }
-	}
+    /* If the cursor has reached the edge of the screen's width, we
+    *  insert a new line in there */
+    if(csr_x >= 80) {
+        csr_x = 0;
+        csr_y++;
+    }
 
-    volatile char* display = (volatile char*) VIDEO_ADDRESS;
-
-	display[(y * VGA_WIDTH + x) * 2] = c;
-	display[(y * VGA_WIDTH + x) * 2 + 1] = VGA_COLOUR;
-	x++;
-	update_cursor(x, y);
+    /* Scroll the screen if needed, and finally move the cursor */
+    scroll();
+    move_csr();
 }
 
-void puts(const char* string) {
-    while( *string != 0 ) {
-		putc(*string++);
-	}
+/* Uses the above routine to output a string... */
+void puts(char *text) {
+    int i;
+
+    for (i = 0; i < strlen(text); i++) {
+        putc(text[i]);
+    }
+}
+
+/* Sets our text-mode VGA pointer, then clears the screen for us */
+void init_video(void) {
+    textmemptr = (unsigned short *)0xB8000;
+    clear_screen();
 }
