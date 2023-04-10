@@ -1,7 +1,7 @@
 #include "system/sys/gdt.h"
 //#include "system/sys/tss.h"
 
-gdt_entry_t gdt[MAX_ENTRIES];
+gdt_entry_t gdt[GDT_MAX_ENTRIES];
 gdt_pointer_t gdt_ptr;
 
 void gdt_set_gate(int32_t num, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran) {
@@ -17,14 +17,14 @@ void gdt_set_gate(int32_t num, uint32_t base, uint32_t limit, uint8_t access, ui
 }
 
 void gdt_init() {
-    gdt_ptr.limit   = (sizeof(gdt_entry_t) * MAX_ENTRIES) - 1;
+    gdt_ptr.limit   = (sizeof(gdt_entry_t) * GDT_MAX_ENTRIES) - 1;
     gdt_ptr.base    = (uint32_t) &gdt;
 
     gdt_set_gate(0, 0, 0, 0, 0);
     gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
     gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
-    gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
-    gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
+    //gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
+    //gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
 
     //tss_write(5, 0x10, 0x0);
 

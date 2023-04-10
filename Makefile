@@ -4,8 +4,8 @@
 
 # Future: $(shell find . -name '*.c')
 
-C_SOURCES = $(wildcard kernel/*.c kernel/drivers/*.c lib/libc/string/*.c lib/libc/stdio/*.c kernel/system/gdt/*.c)
-ASM_SOURCES = $(wildcard boot/*.asm kernel/system/gdt/*.asm kernel/system/assemblies/*.asm )
+C_SOURCES = $(wildcard kernel/*.c kernel/drivers/*.c lib/libc/string/*.c lib/libc/stdio/*.c kernel/system/gdt/*.c kernel/system/interrupts/*.c kernel/system/*.c)
+ASM_SOURCES = $(wildcard boot/*.asm kernel/system/gdt/*.asm kernel/system/assemblies/*.asm kernel/system/interrupts/*.asm)
 
 C_OBJS = ${C_SOURCES:.c=.o}
 ASM_OBJS = ${ASM_SOURCES:.asm=.out}
@@ -36,7 +36,7 @@ buildiso:
 
 run:
 #	qemu-system-i386 -kernel build/kernel.bin
-	qemu-system-i386 -cdrom build/image/BlinkKernel.iso
+	qemu-system-i386 -cdrom build/image/BlinkKernel.iso -monitor stdio
 
 clean:
 	rm -f $(C_OBJS)

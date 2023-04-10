@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#define MAX_ENTRIES 6
+#define GDT_MAX_ENTRIES 6
 
 // Defines a GDT entry. Packed to prevent compiler from optimizing the packing.
 typedef struct gdt_entry {
@@ -20,7 +20,7 @@ typedef struct gdt_pointer {
     uint32_t base;
 } __attribute__((packed)) gdt_pointer_t;
 
-extern gdt_flush(uint32_t gdt_ptr);
+extern void gdt_flush(uint32_t);
 
 void gdt_set_gate(int32_t num, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran);
 void gdt_init();

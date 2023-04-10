@@ -12,4 +12,4 @@ typedef unsigned long   uint64_t;
 
 typedef uint64_t        size_t;
 
-#define NULL 0 
+#define NULL            ((void*)0)
