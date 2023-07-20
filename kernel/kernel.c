@@ -1,39 +1,15 @@
-#include "system/multiboot.h"
-#include "system/assemblies.h"
-
-#include "system/sys/gdt.h"
-#include "system/sys/idt.h"
-#include "system/sys/isr.h"
-#include "system/sys/irq.h"
-
-#include "drivers/keyboard.h"
-#include "drivers/display.h"
-
 #include <stdio.h>
 
-typedef struct multiboot_header multiboot_header_t;
+#include "system/gdt.h"
 
-void kmain(multiboot_header_t* mboot) {
+void kmain() {
+	initialise_console();
 
-    // If not using GRUB, comment out the following line.
-    if (!(mboot->magic & MULTIBOOT_HEADER_MAGIC)) {
-        // Something went terribly wrong in the boot stage.
-        for(;;);
-    }
-    init_video();
+	gdt_install();
+	printf("Loaded the GDT successfully!\n");
+	
 
-    CLI();
 
-    printf("Kernel Initialisation:\n");
-    gdt_init();
-    idt_install();
-    isr_install();
-    irq_install();
+	printf("Hello, kernel World!\n");
 
-    STI();
-    
-    // keyboard_install();
-
-    // Infinite loop until I figure out why the loop in boot.asm isn't working.
-    for(;;) NOP();
 }

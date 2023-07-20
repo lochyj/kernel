@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 void* memcpy(void* dest, const void* src, int count);
 void* memset(void* dest, unsigned char val, int count);

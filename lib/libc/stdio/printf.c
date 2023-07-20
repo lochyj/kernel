@@ -5,25 +5,22 @@
 //* The modified parts of the code is licensed under the MIT licence and / or in accordance to the root licence of the project.  |
 //* ------------------------------------------------------------------------------------------------------------------------------
 
+//TODO: make this less bad
+
 #include <stdio.h>
 
-#include <stdint.h>
-#include <stdbool.h>
-#include "drivers/display.h"
-
 static void putchr(const char c) {
-    char s = (char)c;
-    putc(s);
+    put_char((char) c);
 }
 
 static void putstr(const char* str) {
     while(*str) {
-        putc(*str);
+        put_char(*str);
         str++;
     }
 }
 
-static int strlen(char* string) {
+static int _strlen(char* string) {
     int i = 0;
     while (string[i] != '\0') i++;
     return i;
@@ -31,7 +28,7 @@ static int strlen(char* string) {
 
 static void reverse(char string[]) {
     int c, i, j;
-    for (i = 0, j = strlen(string)-1; i < j; i++, j--) {
+    for (i = 0, j = _strlen(string)-1; i < j; i++, j--) {
         c = string[i];
         string[i] = string[j];
         string[j] = c;
@@ -64,13 +61,11 @@ static void int_to_string(int n, char str[]) {
 #define PRINTF_LENGTH_LONG          3
 #define PRINTF_LENGTH_LONG_LONG     4
 
-static int* printf_number(int* argp, int length, int sign, int radix);
 
 void printf(const char* format, ...) {
     int* argp = (int*) &format;
     int state = PRINTF_STATE_NORMAL;
     int length = PRINTF_LENGTH_DEFAULT;
-    int radix = 10;
     bool sign = false;
 
     argp++;
@@ -120,11 +115,11 @@ void printf(const char* format, ...) {
                                 break;
 
                     case 's':   if (length == PRINTF_LENGTH_LONG || length == PRINTF_LENGTH_LONG_LONG) {
-                                    puts(*(char**)argp);
+                                    putstr(*(char**)argp);
                                     argp += 2;
                                 }
                                 else {
-                                    puts(*(char**)argp);
+                                    putstr(*(char**)argp);
                                     argp++;
                                 }
                                 break;
@@ -133,12 +128,12 @@ void printf(const char* format, ...) {
                                 break;
 
                     case 'd':
-                    case 'i':   radix = 10; sign = true;
-                                argp = printf_number(argp, length, sign, radix);
+                    case 'i':
+                                argp = printf_number(argp, length, sign);
                                 break;
 
-                    case 'u':   radix = 10; sign = false;
-                                argp = printf_number(argp, length, sign, radix);
+                    case 'u':
+                                argp = printf_number(argp, length, sign);
                                 break;
 
                     case 'X':
@@ -146,12 +141,12 @@ void printf(const char* format, ...) {
                                 int_to_string((int)argp, buffer);
                                 putstr(buffer);
                                 break;
-                    case 'p':   radix = 16; sign = false;
-                                argp = printf_number(argp, length, sign, radix);
+                    case 'p':
+                                argp = printf_number(argp, length, sign);
                                 break;
 
-                    case 'o':   radix = 8; sign = false;
-                                argp = printf_number(argp, length, sign, radix);
+                    case 'o':
+                                argp = printf_number(argp, length, sign);
                                 break;
 
                     // ignore invalid spec
@@ -161,7 +156,6 @@ void printf(const char* format, ...) {
                 // reset state
                 state = PRINTF_STATE_NORMAL;
                 length = PRINTF_LENGTH_DEFAULT;
-                radix = 10;
                 sign = false;
                 break;
         }
@@ -172,7 +166,7 @@ void printf(const char* format, ...) {
 
 const char g_HexChars[] = "0123456789abcdef";
 
-static int* printf_number(int* argp, int length, int sign, int radix) {
+static int* printf_number(int* argp, int length, int sign) {
     char buffer[32];
     unsigned long long number = NULL;
 
