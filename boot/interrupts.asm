@@ -80,29 +80,30 @@ extern isr_handler
 ; up for kernel mode segments, calls the C-level fault handler,
 ; and finally restores the stack frame.
 isr_common_stub:
-    pusha                    ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
+  ; 1. Save CPU state
+	pusha ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
+	mov ax, ds ; Lower 16-bits of eax = ds.
+	push eax ; save the data segment descriptor
+	mov ax, 0x10  ; kernel data segment descriptor
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
 
-    mov ax, ds               ; Lower 16-bits of eax = ds.
-    push eax                 ; save the data segment descriptor
+  ; 2. Call C handler
+  push esp ; push registers_t *r pointer
+	call isr_handler
+	pop eax ; clear pointer afterwards
 
-    mov ax, 0x10  ; load the kernel data segment descriptor
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-    call isr_handler
-
-    pop ebx        ; reload the original data segment descriptor
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
-    mov gs, bx
-
-    popa                     ; Pops edi,esi,ebp...
-    add esp, 8     ; Cleans up the pushed error code and pushed ISR number
-    sti
-    iret           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
+  ; 3. Restore state
+	pop eax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	popa
+	add esp, 8 ; Cleans up the pushed error code and pushed ISR number
+	iret ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
 
 ; In kernel/system/interrupts/isr.c
 extern irq_handler
@@ -111,40 +112,41 @@ extern irq_handler
 ; up for kernel mode segments, calls the C-level fault handler,
 ; and finally restores the stack frame.
 irq_common_stub:
-    pusha                    ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
+  ; 1. Save CPU state
+  pusha
+  mov ax, ds
+  push eax
+  mov ax, 0x10
+  mov ds, ax
+  mov es, ax
+  mov fs, ax
+  mov gs, ax
 
-    mov ax, ds               ; Lower 16-bits of eax = ds.
-    push eax                 ; save the data segment descriptor
+  ; 2. Call C handler
+  push esp
+  call irq_handler ; Different than the ISR code
+  pop ebx  ; Different than the ISR code
 
-    mov ax, 0x10  ; load the kernel data segment descriptor
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-    call irq_handler
-
-    pop ebx        ; reload the original data segment descriptor
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
-    mov gs, bx
-
-    popa                     ; Pops edi,esi,ebp...
-    add esp, 8     ; Cleans up the pushed error code and pushed ISR number
-    sti
-    iret           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
+  ; 3. Restore state
+  pop ebx
+  mov ds, bx
+  mov es, bx
+  mov fs, bx
+  mov gs, bx
+  popa
+  add esp, 8
+  iret
 
 global isr_stub_table
 isr_stub_table:
 %assign i 0
 %rep    32
-    dd isr%+i ; use DQ instead if targeting 64-bit
+  dd isr%+i ; use DQ instead if targeting 64-bit
 %assign i i+1
 %endrep
 
 global idt_flush
 idt_flush:
-    mov eax, [esp+4]  ; Get the pointer to the IDT, passed as a parameter. 
-    lidt [eax]        ; Load the IDT pointer.
-    ret
+  mov eax, [esp+4]  ; Get the pointer to the IDT, passed as a parameter.
+  lidt [eax]        ; Load the IDT pointer.
+  ret

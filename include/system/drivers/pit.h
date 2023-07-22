@@ -7,4 +7,5 @@
 #include "system/misc/ports.h"
 #include "system/cpu/interrupts.h"
 
-void init_timer(uint32_t frequency);
+void register_PIT();
+void begin_timer(uint32_t frequency);

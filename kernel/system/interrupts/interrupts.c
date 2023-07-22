@@ -3,7 +3,7 @@
 isr_t interrupt_handlers[256];
 
 idt_entry_t idt_entries[256];
-idtr_t   idt_ptr;
+idtr_t      idt_ptr;
 
 char *exception_messages[] = {
     "Division By Zero",
@@ -48,34 +48,31 @@ void register_interrupt_handler(uint8_t vector, isr_t handler) {
 }
 
 // This gets called from our ASM interrupt handler stub.
-void isr_handler(registers_t regs) {
-    printf("Received interrupt: %d\n", regs.int_no);
+void isr_handler(registers_t *regs) {
+    printf("Received interrupt: %d\n", regs->int_no);
 
-    if (interrupt_handlers[regs.int_no] != 0) {
-        isr_t handler = interrupt_handlers[regs.int_no];
+    if (interrupt_handlers[regs->int_no] != 0) {
+        isr_t handler = interrupt_handlers[regs->int_no];
         handler(regs);
     }
     else {
-        printf("Unhandled interrupt: %s\n", exception_messages[regs.int_no]);
+        printf("Unhandled interrupt: %s\n", exception_messages[regs->int_no]);
     }
 }
 
 // This gets called from our ASM interrupt handler stub.
-void irq_handler(registers_t regs) {
-    // Send an EOI (end of interrupt) signal to the PICs.
-    // If this interrupt involved the slave.
-    if (regs.int_no >= 40) {
-        // Send reset signal to slave.
-        outb(0xA0, 0x20);
-    }
-
-    // Send reset signal to master. (As well as slave, if necessary).
-    outb(0x20, 0x20);
-
-    if (interrupt_handlers[regs.int_no] != 0) {
-        isr_t handler = interrupt_handlers[regs.int_no];
+void irq_handler(registers_t *regs) {
+    /* Handle the interrupt in a more modular way */
+    if (interrupt_handlers[regs->int_no] != 0) {
+        isr_t handler = interrupt_handlers[regs->int_no];
         handler(regs);
     }
+
+    // EOI
+    if (regs->int_no >= 40) {
+        outb(0xA0, 0x20); /* follower */
+    }
+    outb(0x20, 0x20); /* leader */
 
 }
 
@@ -160,4 +157,40 @@ void idt_init() {
     idt_set_gate(47, (uint32_t)irq15, 0x08, 0x8E);
 
     idt_flush((uint32_t)&idt_ptr);
+}
+
+//TODO: mask all of the IRQs before enabling them (except IRQ2)
+
+void IRQ_set_all_mask() {
+    for (int8_t i = 0; i < 16; i++){
+        IRQ_set_mask(i);
+    }
+}
+
+void IRQ_set_mask(uint8_t IRQline) {
+    uint16_t port;
+    uint8_t value;
+
+    if(IRQline < 8) {
+        port = 0x21;
+    } else {
+        port = 0xA1;
+        IRQline -= 8;
+    }
+    value = inb(port) | (1 << IRQline);
+    outb(port, value);
+}
+
+void IRQ_clear_mask(uint8_t IRQline) {
+    uint16_t port;
+    uint8_t value;
+
+    if(IRQline < 8) {
+        port = 0x21;
+    } else {
+        port = 0xA1;
+        IRQline -= 8;
+    }
+    value = inb(port) & ~(1 << IRQline);
+    outb(port, value);
 }

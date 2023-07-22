@@ -3,6 +3,7 @@
 #include "system/memory/gdt.h"
 #include "system/cpu/interrupts.h"
 #include "system/drivers/pit.h"
+#include "system/drivers/keyboard.h"
 
 const char* KERNEL_VERSION = "v0.1.0";
 const char* USER = "lochyj";
@@ -17,6 +18,13 @@ void kmain() {
 	idt_init();
 	printf("Loaded the IDT and ISR successfully!\n");
 
+   // NOTE: you should initialize any interrupt handlers before sti
+   // So register them here:
+   //register_PIT();
+   init_keyboard();
+
+   // ---
+
    asm volatile("sti");
    printf("Successfully enabled interrupts!\n");
 
@@ -28,7 +36,14 @@ void kmain() {
    printf("|____/|_|_|_| |_|_|\\_\\\\____/|_____/\n");
    printf("Kernel version %s; User: %s\n", KERNEL_VERSION, USER);
    printf("console@%s> ", USER);
+   //printf("\n\n");
 
-   init_timer(50);
+   //begin_timer(100);
+
+   // Testing:
+   asm volatile("int $0x5");
+
+   for (;;)
+      asm volatile("nop");
 
 }
