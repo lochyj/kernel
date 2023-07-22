@@ -38,14 +38,14 @@ void kmain() {
    printf("|____/|_|_|_| |_|_|\\_\\\\____/|_____/\n");
    printf("Kernel version %s; User: %s\n", KERNEL_VERSION, USER);
    printf("console@%s> ", USER);
-   //printf("\n\n");
 
-   //begin_timer(100);
 
    // Testing:
+   //printf("\n\n");
    //asm volatile("int $0x5");
-
-   PANIC("Testing panic");
+   //PANIC("Testing panic");
+   //begin_timer(100);
+   // ---
 
    for (;;)
       asm volatile("nop");
