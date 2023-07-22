@@ -2,13 +2,13 @@
 
 # Future: $(shell find . -name '*.c')
 
-C_SOURCES = $(wildcard kernel/*.c kernel/drivers/*.c lib/libc/string/*.c lib/libc/stdio/*.c kernel/system/memory/*.c kernel/system/interrupts/*.c kernel/system/pit/*.c)
-ASM_SOURCES = $(wildcard boot/*.asm)
+C_SOURCES = $(wildcard kernel/*.c kernel/system/debug/*.c kernel/drivers/*.c lib/libc/string/*.c lib/libc/stdio/*.c kernel/system/memory/*.c kernel/system/interrupts/*.c kernel/system/pit/*.c)
+ASM_SOURCES = $(wildcard asm/*.asm)
 
 C_OBJS = ${C_SOURCES:.c=.o}
 ASM_OBJS = ${ASM_SOURCES:.asm=.out}
 
-CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Wno-int-conversion -I . -I ./include/ -I ./include/lib/
+CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Wno-int-conversion -Wno-unused-parameter -Wno-unused-function -I . -I ./include/ -I ./include/lib/
 ASMFLAGS = -felf32
 
 all: $(ASM_OBJS) $(C_OBJS) link mboot buildiso run clean

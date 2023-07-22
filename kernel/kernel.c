@@ -5,6 +5,8 @@
 #include "system/drivers/pit.h"
 #include "system/drivers/keyboard.h"
 
+#include "system/debug/debug.h"
+
 const char* KERNEL_VERSION = "v0.1.0";
 const char* USER = "lochyj";
 
@@ -41,7 +43,9 @@ void kmain() {
    //begin_timer(100);
 
    // Testing:
-   asm volatile("int $0x5");
+   //asm volatile("int $0x5");
+
+   PANIC("Testing panic");
 
    for (;;)
       asm volatile("nop");

@@ -68,6 +68,8 @@ void put_char(char character) {
         put_char(' ');
         update_console_cursor(x - 1, y);
         return;
+    } else if (character == 0x00) {
+        return;
     }
 
     video_memory[cursor * 2] = character | (CONSOLE_DEFAULT_COLOR << 8);
