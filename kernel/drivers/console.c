@@ -1,4 +1,4 @@
-#include "drivers/console.h"
+#include "system/drivers/console.h"
 
 //TODO: cleanup this mess...
 //TODO: implement scrolling
@@ -17,7 +17,7 @@ void enable_console_cursor(uint8_t cursor_start, uint8_t cursor_end) {
 // From: https://wiki.osdev.org/Text_Mode_Cursor
 void update_console_cursor(int x, int y) {
 	uint16_t pos = y * VGA_WIDTH + x;
- 
+
 	outb(0x3D4, 0x0F);
 	outb(0x3D5, (uint8_t) (pos & 0xFF));
 	outb(0x3D4, 0x0E);
@@ -39,7 +39,7 @@ void clear_console() {
 
     // Set the console to be blank spaces with the default color
     for(int i = 0; i < VGA_HEIGHT; i++)
-        // the first param actually is a pointer its just gcc realize
+        // the first param actually is a pointer its just gcc doesn't realize
         memsetw((unsigned short)(video_memory + i * VGA_WIDTH), blank, VGA_WIDTH);
 
     update_console_cursor(0, 0);
@@ -49,11 +49,32 @@ void put_char(char character) {
     uint16_t cursor = get_console_cursor();
     int x, y;
     CURSOR_INDEX_TO_POS(cursor, x, y);
+
+    if (character == '\n') {
+        update_console_cursor(0, y + 1);
+        return;
+    } else if (character == '\r') {
+        update_console_cursor(0, y);
+        return;
+    } else if (character == '\b') {
+        if (x == 0 && y == 0)
+            return;
+
+        if (x == 0) {
+            update_console_cursor(VGA_WIDTH - 1, y - 1);
+        } else {
+            update_console_cursor(x - 1, y);
+        }
+        put_char(' ');
+        update_console_cursor(x - 1, y);
+        return;
+    }
+
     video_memory[cursor * 2] = character | (CONSOLE_DEFAULT_COLOR << 8);
     update_console_cursor(x + 1, y);
 }
 
 void initialise_console() {
-    enable_console_cursor(0, 15);
     clear_console();
+    enable_console_cursor(0, 15);
 }
