@@ -4,6 +4,8 @@
 #include "system/cpu/interrupts.h"
 #include "system/drivers/pit.h"
 #include "system/drivers/keyboard.h"
+#include "system/drivers/mouse.h"
+//#include "system/memory/paging.h"
 
 #include "system/debug/debug.h"
 
@@ -23,7 +25,17 @@ void kmain() {
    // NOTE: you should initialize any interrupt handlers before sti
    // So register them here:
    //register_PIT();
+
    init_keyboard();
+   printf("Initialized the PS/2 keyboard driver successfully!\n");
+
+   init_mouse();
+   printf("Initialized the PS/2 mouse driver successfully!\n");
+
+   // For debugging and visualizing mouse position:
+   set_mouse_logging(true);
+
+   //initialise_paging();
 
    // ---
 
@@ -38,6 +50,7 @@ void kmain() {
    printf("|____/|_|_|_| |_|_|\\_\\\\____/|_____/\n");
    printf("Kernel version %s; User: %s\n", KERNEL_VERSION, USER);
    printf("console@%s> ", USER);
+   printf("\n");
 
 
    // Testing:

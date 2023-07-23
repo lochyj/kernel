@@ -37,9 +37,19 @@ run:
 
 #	This is used for testing
 #	qemu-system-i386 -kernel build/kernel.bin
+#	qemu-system-i386 -cdrom build/image/BlinkOS.iso -monitor stdio
 
-# 	Please use this if you want to try out the kernel :)
-	qemu-system-i386 -cdrom build/image/BlinkOS.iso
+# 	Please use this if you want to try out the kernel
+	qemu-system-i386                                 	\
+		-accel tcg,thread=single                       	\
+		-cpu core2duo                                  	\
+		-m 128                                         	\
+		-no-reboot                                     	\
+		-drive format=raw,media=cdrom,file=build/image/BlinkOS.iso\
+		-serial stdio                                  	\
+		-smp 1                                         	\
+		-usb                                           	\
+		-vga std
 
 build: $(ASM_OBJS) $(C_OBJS) link mboot buildiso run
 
