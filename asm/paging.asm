@@ -26,8 +26,8 @@ write_cr3:
 	pop ebp
 	retn
 
-global switch_page_directory
-switch_page_directory:
+global int_switch_page_directory
+int_switch_page_directory:
 	push ebp
 	mov ebp, esp
 	mov eax, [ebp+8]

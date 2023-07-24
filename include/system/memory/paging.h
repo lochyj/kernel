@@ -1,12 +1,17 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
-#include "system/debug/debug.h"
+#include "system/memory/kheap.h"
+#include "system/misc/ports.h"
 #include "system/cpu/interrupts.h"
+#include "system/debug/debug.h"
 
-typedef struct page {
+typedef struct page
+{
    uint32_t present    : 1;   // Page present in memory
    uint32_t rw         : 1;   // Read-only if clear, readwrite if set
    uint32_t user       : 1;   // Supervisor level only if clear
@@ -16,42 +21,50 @@ typedef struct page {
    uint32_t frame      : 20;  // Frame address (shifted right 12 bits)
 } page_t;
 
-typedef struct page_table {
+typedef struct page_table
+{
    page_t pages[1024];
 } page_table_t;
 
-typedef struct page_directory {
-   // Array of pointers to pagetables.
+typedef struct page_directory
+{
+   /**
+      Array of pointers to pagetables.
+   **/
    page_table_t *tables[1024];
-
-   // Array of pointers to the pagetables above, but gives their *physical* location, for loading into the CR3 register.
+   /**
+      Array of pointers to the pagetables above, but gives their *physical*
+      location, for loading into the CR3 register.
+   **/
    uint32_t tablesPhysical[1024];
-
-   // The physical address of tablesPhysical.
+   /**
+      The physical address of tablesPhysical. This comes into play
+      when we get our kernel heap allocated and the directory
+      may be in a different location in virtual memory.
+   **/
    uint32_t physicalAddr;
 } page_directory_t;
 
 /**
-   Sets up the environment, page directories etc and
-   enables paging.
+  Sets up the environment, page directories etc and
+  enables paging.
 **/
 void initialise_paging();
 
 /**
-   Causes the specified page directory to be loaded into the
-   CR3 register.
+  Causes the specified page directory to be loaded into the
+  CR3 register.
 **/
-void kernel_switch_page_directory(page_directory_t *new);
+void switch_page_directory(page_directory_t *new);
 
 /**
-   Retrieves a pointer to the page required.
-   If make == 1, if the page-table in which this page should
-   reside isn't created, create it!
+  Retrieves a pointer to the page required.
+  If make == 1, if the page-table in which this page should
+  reside isn't created, create it!
 **/
 page_t *get_page(uint32_t address, int make, page_directory_t *dir);
 
-// Handler for page faults.
-void page_fault(registers_t *regs);
-
-// Switches the page directory to the supplied "uint32_t tablesPhysical[1024];" from page_directory_t
-extern void switch_page_directory(void*);
+/**
+  Handler for page faults.
+**/
+void page_fault(registers_t* regs);

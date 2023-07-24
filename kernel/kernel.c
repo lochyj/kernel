@@ -5,19 +5,24 @@
 #include "system/drivers/pit.h"
 #include "system/drivers/keyboard.h"
 #include "system/drivers/mouse.h"
+#include "system/misc/multiboot.h"
 //#include "system/memory/paging.h"
 
 #include "system/debug/debug.h"
 
-const char* KERNEL_VERSION = "v0.1.0";
+const char* KERNEL_VERSION = "v0.1.1";
 const char* USER = "lochyj";
 
-void kmain() {
+void kmain(multiboot_t *mboot, uint32_t mboot_mag, uintptr_t esp) {
+
    // I think its ok to put this here? Its useful anyways.
 	initialise_console();
 
 	gdt_install();
 	printf("Loaded the GDT successfully!\n");
+
+   //initialise_paging();
+   //printf("Successfully initialized paging!\n");
 
 	idt_init();
 	printf("Loaded the IDT and ISR successfully!\n");
@@ -33,9 +38,8 @@ void kmain() {
    printf("Initialized the PS/2 mouse driver successfully!\n");
 
    // For debugging and visualizing mouse position:
-   set_mouse_logging(true);
+   set_mouse_logging(false);
 
-   //initialise_paging();
 
    // ---
 
