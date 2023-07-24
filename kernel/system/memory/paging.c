@@ -3,69 +3,70 @@
 // The kernel's page directory
 page_directory_t *kernel_directory=0;
 
-// The current page directory;
 page_directory_t *current_directory=0;
 
-// A bitset of frames - used or free.
 uint32_t *frames;
 uint32_t nframes;
 
-// Defined in kheap.c
-extern uint32_t placement_address;
-
 // Macros used in the bitset algorithms.
-#define INDEX_FROM_BIT(a) (a/(8*4))
-#define OFFSET_FROM_BIT(a) (a%(8*4))
+#define INDEX_FROM_BIT(a) (a / ((uint8_t) 32))
+#define OFFSET_FROM_BIT(a) (a % ((uint8_t) 32))
 
 // Static function to set a bit in the frames bitset
-static void set_frame(uint32_t frame_addr) {
-   uint32_t frame = frame_addr/0x1000;
+static void set_frame(uintptr_t frame_address) {
 
-   uint32_t idx = INDEX_FROM_BIT(frame);
-   uint32_t off = OFFSET_FROM_BIT(frame);
+   uint32_t frame = frame_address / 0x1000;
 
-   frames[idx] |= (0x1 << off);
+   uint32_t index = INDEX_FROM_BIT(frame);
+   uint32_t offset = OFFSET_FROM_BIT(frame);
+
+   frames[index] |= (0x1 << offset);
 }
 
 // Static function to clear a bit in the frames bitset
-static void clear_frame(uint32_t frame_addr) {
-   uint32_t frame = frame_addr/0x1000;
+static void clear_frame(uintptr_t frame_addr) {
+   uint32_t frame = frame_addr / 0x1000;
 
-   uint32_t idx = INDEX_FROM_BIT(frame);
-   uint32_t off = OFFSET_FROM_BIT(frame);
+   uint32_t index = INDEX_FROM_BIT(frame);
+   uint32_t offset = OFFSET_FROM_BIT(frame);
 
-   frames[idx] &= ~(0x1 << off);
+   frames[index] &= ~(0x1 << offset);
 }
 
 // Static function to test if a bit is set.
 static uint32_t test_frame(uint32_t frame_addr) {
    uint32_t frame = frame_addr/0x1000;
 
-   uint32_t idx = INDEX_FROM_BIT(frame);
-   uint32_t off = OFFSET_FROM_BIT(frame);
+   uint32_t index = INDEX_FROM_BIT(frame);
+   uint32_t offset = OFFSET_FROM_BIT(frame);
 
-   return (frames[idx] & (0x1 << off));
+   return (frames[index] & (0x1 << offset));
 }
 
 // Static function to find the first free frame.
-static uint32_t first_frame()
-{
+static uint32_t first_frame() {
+
     uint32_t i, j;
-    for (i = 0; i < INDEX_FROM_BIT(nframes); i++)
-    {
-        if (frames[i] != 0xFFFFFFFF) // nothing free, exit early.
-        {
-            // at least one bit is free here.
-            for (j = 0; j < 32; j++)
-            {
-                uint32_t toTest = 0x1 << j;
-                if ( !(frames[i]&toTest) )
-                {
-                    return i*4*8+j;
-                }
+
+    for (i = 0; i < INDEX_FROM_BIT(nframes); i++) {
+
+        if (frames[i] == 0xFFFFFFFF)
+            continue;
+
+        // At least one bit should be free here.
+        for (j = 0; j < 32; j++) {
+
+            uint32_t frameToTest = 0x1 << j;
+
+            if ( !(frames[i] & frameToTest) ) {
+                return i * ((uint8_t) 32) + j;
             }
+
         }
+
     }
+
+    return -1;
 }
 
 void alloc_frame(page_t *page, int is_kernel, int is_writeable)
@@ -87,6 +88,7 @@ void alloc_frame(page_t *page, int is_kernel, int is_writeable)
         page->user = (is_kernel)?0:1;
         page->frame = idx;
     }
+
 }
 
 // Function to deallocate a frame.

@@ -13,7 +13,12 @@
 const char* KERNEL_VERSION = "v0.1.1";
 const char* USER = "lochyj";
 
-void kmain(multiboot_t *mboot, uint32_t mboot_mag, uintptr_t esp) {
+void kmain(multiboot_t *mboot, uint32_t multiboot_magic) {
+
+   // Check if the bootloader is multiboot compliant
+   if (multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC) {
+      PANIC("Bootloader is not multiboot compliant!");
+   }
 
    // I think its ok to put this here? Its useful anyways.
 	initialise_console();

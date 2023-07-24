@@ -1,46 +1,38 @@
 #include "system/memory/kheap.h"
 
-// end is defined in the linker script.assert
-extern uint32_t end;
-uint32_t placement_address = (uint32_t)&end;
+// End is defined in the linker script
+extern void* end;
+uintptr_t placement_pointer = (uintptr_t)&end;
 
-uint32_t kmalloc_int(uint32_t sz, int align, uint32_t *phys)
-{
-    // This will eventually call malloc() on the kernel heap.
-    // For now, though, we just assign memory at placement_address
-    // and increment it by sz. Even when we've coded our kernel
-    // heap, this will be useful for use before the heap is initialised.
-    if (align == 1 && (placement_address & 0x00000FFF) )
-    {
-        // Align the placement address;
-        placement_address &= 0x00000FFF;
-        placement_address += 0x1000;
-    }
-    if (phys)
-    {
-        *phys = placement_address;
-    }
-    uint32_t tmp = placement_address;
-    placement_address += sz;
-    return tmp;
+uintptr_t kmalloc_internal(size_t size, int align, uintptr_t * phys) {
+	if (align && (placement_pointer & 0xFFFFF000)) {
+		placement_pointer &= 0xFFFFF000;
+		placement_pointer += 0x1000;
+	}
+
+	if (phys) {
+		*phys = placement_pointer;
+	}
+
+	uintptr_t address = placement_pointer;
+
+	placement_pointer += size;
+
+	return (uintptr_t)address;
 }
 
-uint32_t kmalloc_a(uint32_t sz)
-{
-    return kmalloc_int(sz, 1, 0);
+uintptr_t kmalloc(size_t size) {
+	return kmalloc_internal(size, 0, NULL);
 }
 
-uint32_t kmalloc_p(uint32_t sz, uint32_t *phys)
-{
-    return kmalloc_int(sz, 0, phys);
+uintptr_t kmalloc_align(size_t size) {
+    return kmalloc_internal(size, 1, NULL);
 }
 
-uint32_t kmalloc_ap(uint32_t sz, uint32_t *phys)
-{
-    return kmalloc_int(sz, 1, phys);
+uintptr_t kmalloc_phys(size_t size, uintptr_t *phys) {
+    return kmalloc_internal(size, 0, phys);
 }
 
-uint32_t kmalloc(uint32_t sz)
-{
-    return kmalloc_int(sz, 0, 0);
+uintptr_t kmalloc_align_phys(size_t size, uintptr_t *phys) {
+    return kmalloc_internal(size, 1, phys);
 }

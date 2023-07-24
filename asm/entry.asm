@@ -49,8 +49,4 @@ _start:
 	extern kmain
 	call kmain
 
-	; Disable interrupts again
-	cli
-.hang:	hlt
-	jmp .hang
-.end:
+	jmp $

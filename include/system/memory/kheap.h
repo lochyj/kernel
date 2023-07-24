@@ -1,8 +1,17 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
+#include "system/types.h"
 
-uint32_t kmalloc_a(uint32_t sz);  // page aligned.
-uint32_t kmalloc_p(uint32_t sz, uint32_t *phys); // returns a physical address.
-uint32_t kmalloc_ap(uint32_t sz, uint32_t *phys); // page aligned and returns a physical address.
-uint32_t kmalloc(uint32_t sz); // vanilla (normal).
+// The kernel's dumb version of malloc
+uintptr_t kmalloc(size_t size);
+
+// The kernel's dumb version of malloc, but aligned
+uintptr_t kmalloc_align(size_t size);
+
+// The kernel's dumb version of malloc, but with a physical address
+uintptr_t kmalloc_phys(size_t size, uintptr_t *phys);
+
+// The kernel's dumb version of malloc, but aligned and with a physical address
+uintptr_t kmalloc_align_phys(size_t size, uintptr_t *phys);
