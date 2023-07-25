@@ -44,12 +44,13 @@ run:
 		-accel tcg,thread=single                       	\
 		-cpu core2duo                                  	\
 		-m 128                                         	\
-		-no-reboot                                     	\
 		-drive format=raw,media=cdrom,file=build/image/BlinkOS.iso\
-		-serial stdio                                  	\
+		-monitor stdio                                 	\
 		-smp 1                                         	\
 		-usb                                           	\
-		-vga std
+		-vga std										\
+		-d int -no-shutdown -no-reboot
+#		-no-reboot                                     	\
 
 build: $(ASM_OBJS) $(C_OBJS) link mboot buildiso run
 

@@ -1,39 +1,9 @@
-global read_cr0
-read_cr0:
-	mov eax, cr0
-	retn
+global cr3_load_paging_directory
+cr3_load_paging_directory:
+    mov eax, [esp+4]    ; Get the page directory address from the passed argument
+    mov cr3, eax        ; Load the page directory address into CR3
 
-global write_cr0
-write_cr0:
-	push ebp
-	mov ebp, esp
-	mov eax, [ebp+8]
-	mov cr0,  eax
-	pop ebp
-	retn
-
-global read_cr3
-read_cr3:
-	mov eax, cr3
-	retn
-
-global write_cr3
-write_cr3:
-	push ebp
-	mov ebp, esp
-	mov eax, [ebp+8]
-	mov cr3, eax
-	pop ebp
-	retn
-
-global int_switch_page_directory
-int_switch_page_directory:
-	push ebp
-	mov ebp, esp
-	mov eax, [ebp+8]
-	mov cr3, eax
-
-	mov eax, cr0
-	or eax, 0x80000001
-	mov cr0, eax
-	retn
+    mov eax, cr0        ; Get the current value of CR0
+    or eax, 0x80000001  ; Set the PG and PE flags
+    mov cr0, eax        ; Load the new value into CR0
+    ret                 ; Finish!

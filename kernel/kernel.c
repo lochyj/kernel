@@ -6,14 +6,14 @@
 #include "system/drivers/keyboard.h"
 #include "system/drivers/mouse.h"
 #include "system/misc/multiboot.h"
-//#include "system/memory/paging.h"
+#include "system/memory/paging.h"
 
 #include "system/debug/debug.h"
 
 const char* KERNEL_VERSION = "v0.1.1";
 const char* USER = "lochyj";
 
-void kmain(multiboot_t *mboot, uint32_t multiboot_magic) {
+void kmain(multiboot_t* multiboot_header, uint32_t multiboot_magic) {
 
    // Check if the bootloader is multiboot compliant
    if (multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC) {
@@ -26,11 +26,12 @@ void kmain(multiboot_t *mboot, uint32_t multiboot_magic) {
 	gdt_install();
 	printf("Loaded the GDT successfully!\n");
 
-   //initialise_paging();
-   //printf("Successfully initialized paging!\n");
-
 	idt_init();
 	printf("Loaded the IDT and ISR successfully!\n");
+
+   //initialise_paging(multiboot_header->mem_upper + multiboot_header->mem_lower);
+   install_paging();
+   printf("Successfully initialized paging!\n");
 
    // NOTE: you should initialize any interrupt handlers before sti
    // So register them here:
