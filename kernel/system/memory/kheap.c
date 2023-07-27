@@ -5,6 +5,7 @@ extern void* end;
 uintptr_t placement_pointer = (uintptr_t)&end;
 
 uintptr_t kmalloc_internal(size_t size, int align, uintptr_t * phys) {
+
 	if (align && (placement_pointer & 0xFFFFF000)) {
 		placement_pointer &= 0xFFFFF000;
 		placement_pointer += 0x1000;
@@ -19,6 +20,7 @@ uintptr_t kmalloc_internal(size_t size, int align, uintptr_t * phys) {
 	placement_pointer += size;
 
 	return (uintptr_t)address;
+
 }
 
 uintptr_t kmalloc(size_t size) {

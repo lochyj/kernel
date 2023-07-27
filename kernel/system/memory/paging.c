@@ -3,23 +3,7 @@
 extern uintptr_t placement_pointer;
 
 extern void cr3_load_paging_directory(uintptr_t);
-
-void* virtual_to_physical(void* virtual_address) {
-    uint64_t pdindex = (uint64_t)virtual_address >> 22;
-    uint64_t ptindex = (uint64_t)virtual_address >> 12 & 0x03FF;
- 
-    uint64_t *pd = (uint64_t *)0xFFFFF000;
-    // Here you need to check whether the PD entry is present.
-
-    uint64_t *pt = ((uint64_t *)0xFFC00000) + (0x400 * pdindex);
-    // Here you need to check whether the PT entry is present.
- 
-    return (void *)((pt[ptindex] & ~0xFFF) + ((uint64_t)virtual_address & 0xFFF));
-}
-
-uintptr_t fill_page_table(uintptr_t memory_address) {
-	//
-}
+extern void cr0_enable_paging();
 
 /*
  * @param page_directory A pointer to the page directory to initialize.
@@ -28,8 +12,7 @@ uintptr_t fill_page_table(uintptr_t memory_address) {
 void install_paging(/*uint32_t memory_size*/) {
 
 	uint32_t page_directory[1024] __attribute__((aligned(4096)));
-	int i;
-	for(i = 0; i < 1024; i++) {
+	for (int i = 0; i < 1024; i++) {
 		// This sets the following flags to the pages:
 		//   Supervisor: Only kernel-mode can access them
 		//   Write Enabled: It can be both read from and written to
@@ -39,23 +22,22 @@ void install_paging(/*uint32_t memory_size*/) {
 
 	uint32_t first_page_table[1024] __attribute__((aligned(4096)));
 
-	// holds the physical address where we want to start mapping these pages to.
-	// in this case, we want to map these pages to the very beginning of memory.
-	unsigned int j;
-
-	//we will fill all 1024 entries in the table, mapping 4 megabytes
-	for(j = 0; j < 1024; j++) {
+	//we will fill all 1024 entries in the table, mapping 4 megabytes.
+	// I is where we place the first page table. In this case we place it at 0;
+	for (uint32_t i = 0; i < 1024; i++) {
 		// As the address is page aligned, it will always leave 12 bits zeroed.
 		// Those bits are used by the attributes ;)
-		first_page_table[j] = (j * 0x1000) | 3; // attributes: supervisor level, read/write, present.
+		first_page_table[i] = (i * 0x1000) | 3; // attributes: supervisor level, read/write, present.
 	}
 
 	// attributes: supervisor level, read/write, present
-	page_directory[0] = ((unsigned int)first_page_table) | 3;
+	page_directory[0] = ((uint32_t)first_page_table) | 3;
 
 	register_interrupt_handler(14, page_fault_handler);
 
-	load_paging_directory_into_cr3(page_directory);
+	// Pass the pointer to the page directory to the cr3 register and then enable paging.
+	cr3_load_paging_directory(&page_directory);
+	cr0_enable_paging();
 
 }
 

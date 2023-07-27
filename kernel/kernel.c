@@ -30,8 +30,8 @@ void kmain(multiboot_t* multiboot_header, uint32_t multiboot_magic) {
 	printf("Loaded the IDT and ISR successfully!\n");
 
    //initialise_paging(multiboot_header->mem_upper + multiboot_header->mem_lower);
-   install_paging();
-   printf("Successfully initialized paging!\n");
+   //install_paging();
+   //printf("Successfully initialized paging!\n");
 
    // NOTE: you should initialize any interrupt handlers before sti
    // So register them here:
@@ -61,7 +61,6 @@ void kmain(multiboot_t* multiboot_header, uint32_t multiboot_magic) {
    printf("Kernel version %s; User: %s\n", KERNEL_VERSION, USER);
    printf("console@%s> ", USER);
    printf("\n");
-
 
    // Testing:
    //printf("\n\n");
