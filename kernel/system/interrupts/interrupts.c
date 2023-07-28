@@ -1,63 +1,63 @@
 #include "system/cpu/interrupts.h"
 
-isr_t interrupt_handlers[256];
-
+isr_t       interrupt_handlers[256];
 idt_entry_t idt_entries[256];
 idtr_t      idt_ptr;
 
-char *exception_messages[] = {
-    "Division By Zero",
-    "Debug",
-    "Non Maskable Interrupt",
-    "Breakpoint",
-    "Into Detected Overflow",
-    "Out of Bounds",
-    "Invalid Opcode",
-    "No Coprocessor",
-
-    "Double Fault",
-    "Coprocessor Segment Overrun",
-    "Bad TSS",
-    "Segment Not Present",
-    "Stack Fault",
-    "General Protection Fault",
-    "Page Fault",
-    "Unknown Interrupt",
-
-    "Coprocessor Fault",
-    "Alignment Check",
-    "Machine Check",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved"
+// https://css.csail.mit.edu/6.858/2019/readings/i386.pdf - Chapter 9.1
+char* exceptions_0_to_16[] = {
+    "Divide error",                             // 0
+    "Debug exception",                          // 1
+    "Nonmaskable interrupt",                    // 2
+    "Breakpoint (one-byte INT 3 instruction)",  // 3
+    "Overflow (INTO instruction)",              // 4
+    "Bounds check (BOUND instruction)",         // 5
+    "Invalid opcode",                           // 6
+    "Coprocessor not available",                // 7
+    "Double fault",                             // 8
+    "(reserved)",                               // 9
+    "Invalid TSS",                              // 10
+    "Segment not present",                      // 11
+    "Stack exception",                          // 12
+    "General protection",                       // 13
+    "Page fault",                               // 14
+    "(reserved)",                               // 15
+    "Coprocessor error",                        // 16
 };
 
+/*
+ * 17 - 31 are reserved by Intel
+ * 32 - 47 are IRQs
+ * 48 - 255 are user defined / external interrupts
+ */
+
+// Register an interrupt handler function for a given interrupt.
 void register_interrupt_handler(uint8_t vector, isr_t handler) {
     interrupt_handlers[vector] = handler;
 }
 
-// This gets called from our ASM interrupt handler stub.
+// Handles interrupts from the PIC. Called from isr_common_stub in interrupts.asm
 void isr_handler(registers_t *regs) {
-    printf("Received interrupt: %d\n", regs->int_no);
 
     if (interrupt_handlers[regs->int_no] != 0) {
+
         isr_t handler = interrupt_handlers[regs->int_no];
         handler(regs);
+
+    } else {
+
+        // This will never be called when we implement the masking of the IRQ in the near future.
+        if (regs->int_no < 17)
+            printf("Unhandled interrupt: %s\n", exceptions_0_to_16[regs->int_no]);
+
+        else if (regs->int_no < 32)
+            printf("Unhandled reserved interrupt\n");
+
+        else
+            printf("Unhandled external interrupt: IRQ %d\n", regs->int_no);
+
     }
-    else {
-        printf("Unhandled interrupt: %s\n", exception_messages[regs->int_no]);
-    }
+
 }
 
 // This gets called from our ASM interrupt handler stub.
