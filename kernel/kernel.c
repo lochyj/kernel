@@ -23,6 +23,8 @@ void kmain(multiboot_t* multiboot_header, uint32_t multiboot_magic) {
    // I think its ok to put this here? Its useful anyways.
 	initialise_console();
 
+   printf("Total Memory: %dkb of memory available.\n", multiboot_header->mem_upper + multiboot_header->mem_lower);
+
 	gdt_install();
 	printf("Loaded the GDT successfully!\n");
 
@@ -30,7 +32,7 @@ void kmain(multiboot_t* multiboot_header, uint32_t multiboot_magic) {
 	printf("Loaded the IDT and ISR successfully!\n");
 
    //initialise_paging(multiboot_header->mem_upper + multiboot_header->mem_lower);
-   //install_paging();
+   install_paging();
    //printf("Successfully initialized paging!\n");
 
    // NOTE: you should initialize any interrupt handlers before sti

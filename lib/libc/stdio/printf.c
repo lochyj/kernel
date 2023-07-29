@@ -1,229 +1,128 @@
-//* ------------------------------------------------------------------------------------------------------------------------------
-//* The following code came from https://github.com/nanobyte-dev/nanobyte_os/releases/tag/Part6                                  |                    
-//* It has been modified by me to work with my kernel and to fit my needs.                                                       |
-//* The non-modified parts of the code is licensed under the Unlicense, which is a public domain license.                        |
-//* The modified parts of the code is licensed under the MIT licence and / or in accordance to the root licence of the project.  |
-//* ------------------------------------------------------------------------------------------------------------------------------
-
-//TODO: make this less bad
-
 #include <stdio.h>
 
-static void putchr(const char c) {
-    put_char((char) c);
-}
-
-static void putstr(const char* str) {
-    while(*str) {
-        put_char(*str);
-        str++;
+void print_string(char* string) {
+    for (int i = 0; i < strlen(string); i++) {
+        put_char(string[i]);
     }
 }
 
-static int _strlen(char* string) {
+void reverse(char str[], int length) {
+    int start = 0;
+    int end = length - 1;
+    while (start < end) {
+        char temp = str[start];
+        str[start] = str[end];
+        str[end] = temp;
+        end--;
+        start++;
+    }
+}
+
+char* itoa(int num, char* str, int base) {
     int i = 0;
-    while (string[i] != '\0') i++;
-    return i;
-}
-
-static void reverse(char string[]) {
-    int c, i, j;
-    for (i = 0, j = _strlen(string)-1; i < j; i++, j--) {
-        c = string[i];
-        string[i] = string[j];
-        string[j] = c;
+    bool isNegative = false;
+ 
+    /* Handle 0 explicitly, otherwise empty string is
+     * printed for 0 */
+    if (num == 0) {
+        str[i++] = '0';
+        str[i] = '\0';
+        return str;
     }
+
+    // In standard itoa(), negative numbers are handled
+    // only with base 10. Otherwise numbers are
+    // considered unsigned.
+    if (num < 0 && base == 10) {
+        isNegative = true;
+        num = -num;
+    }
+ 
+    // Process individual digits
+    while (num != 0) {
+        int rem = num % base;
+        str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
+        num = num / base;
+    }
+ 
+    // If number is negative, append '-'
+    if (isNegative)
+        str[i++] = '-';
+ 
+    str[i] = '\0'; // Append string terminator
+ 
+    // Reverse the string
+    reverse(str, i);
+ 
+    return str;
 }
-
-static void int_to_string(int n, char str[]) {
-    int i, sign;
-    if ((sign = n) < 0) n = -n;
-    i = 0;
-    do {
-        str[i++] = n % 10 + '0';
-    } while ((n /= 10) > 0);
-
-    if (sign < 0) str[i++] = '-';
-    str[i] = '\0';
-
-    reverse(str);
-}
-
-#define PRINTF_STATE_NORMAL         0
-#define PRINTF_STATE_LENGTH         1
-#define PRINTF_STATE_LENGTH_SHORT   2
-#define PRINTF_STATE_LENGTH_LONG    3
-#define PRINTF_STATE_SPEC           4
-
-#define PRINTF_LENGTH_DEFAULT       0
-#define PRINTF_LENGTH_SHORT_SHORT   1
-#define PRINTF_LENGTH_SHORT         2
-#define PRINTF_LENGTH_LONG          3
-#define PRINTF_LENGTH_LONG_LONG     4
-
 
 void printf(const char* format, ...) {
-    int* argp = (int*) &format;
-    int state = PRINTF_STATE_NORMAL;
-    int length = PRINTF_LENGTH_DEFAULT;
-    bool sign = false;
 
-    argp++;
+    va_list args;
+    va_start(args, format);
 
-    while (*format) {
-        switch (state) {
-            case PRINTF_STATE_NORMAL:
-                switch (*format) {
-                    case '%':   state = PRINTF_STATE_LENGTH; break;
-                    default:    putchr(*format); break;
-                }
-                break;
+    // loop through format string
+    for (int i = 0; i < strlen(format); i++) {
 
-            case PRINTF_STATE_LENGTH:
-                switch (*format) {
-                    case 'h':   length = PRINTF_LENGTH_SHORT;
-                                state = PRINTF_STATE_LENGTH_SHORT; break;
+        // if we find a %, we need to parse the next char
+        if (format[i] == '%') {
 
-                    case 'l':   length = PRINTF_LENGTH_LONG;
-                                state = PRINTF_STATE_LENGTH_LONG; break;
+            // get the next char
+            i++;
 
-                    default:    goto PRINTF_STATE_SPEC_;
-                }
-                break;
+            // We have 33 chars just because we can
+            char buffer[33];
 
-            case PRINTF_STATE_LENGTH_SHORT:
-                if (*format == 'h') {
-                    length = PRINTF_LENGTH_SHORT_SHORT;
-                    state = PRINTF_STATE_SPEC;
-                }
-                else goto PRINTF_STATE_SPEC_;
-                break;
+            // check what it is
+            switch (format[i]) {
+                // if its a %, print a %
+                case '%':
+                    put_char('%');
+                    break;
+                // if its a c, print a char
+                case 'c':
+                    put_char(va_arg(args, int));
+                    break;
+                // if its a s, print a string
+                case 's':
+                    print_string(va_arg(args, char*));
+                    break;
+                // if its a d, print an int
+                case 'd':
+                    print_string(itoa(va_arg(args, int), buffer, 10));
+                    break;
+                // if its a x, print a hex
+                case 'p':
+                case 'x':
+                    print_string(itoa(va_arg(args, int), buffer, 16));
+                    break;
+                // if its a b, print a binary
+                case 'b':
+                    print_string(itoa(va_arg(args, int), buffer, 2));
+                    break;
+                // if its a f, print a float
+                case 'f':
+                    print_string("TODO: make this");
+                    break;
+                // if its a u, print an unsigned int
+                case 'u':
+                    print_string(itoa(va_arg(args, unsigned int), buffer, 10));
+                    break;
+                // if its a o, print an octal
+                case 'o':
+                    print_string(itoa(va_arg(args, int), buffer, 8));
+                    break;
 
-            case PRINTF_STATE_LENGTH_LONG:
-                if (*format == 'l') {
-                    length = PRINTF_LENGTH_LONG_LONG;
-                    state = PRINTF_STATE_SPEC;
-                }
-                else goto PRINTF_STATE_SPEC_;
-                break;
+            }
 
-            case PRINTF_STATE_SPEC:
-            PRINTF_STATE_SPEC_:
-                switch (*format) {
-                    case 'c':   putchr((char)*argp);
-                                argp++;
-                                break;
+        } else {
 
-                    case 's':   if (length == PRINTF_LENGTH_LONG || length == PRINTF_LENGTH_LONG_LONG) {
-                                    putstr(*(char**)argp);
-                                    argp += 2;
-                                }
-                                else {
-                                    putstr(*(char**)argp);
-                                    argp++;
-                                }
-                                break;
+            // if its not a %, print the char
+            put_char(format[i]);
 
-                    case '%':   putchr('%');
-                                break;
-
-                    case 'd':
-                    case 'i':
-                                argp = printf_number(argp, length, sign);
-                                break;
-
-                    case 'u':
-                                argp = printf_number(argp, length, sign);
-                                break;
-
-                    case 'X':
-                    case 'x':   char buffer[32];
-                                int_to_string((int)argp, buffer);
-                                putstr(buffer);
-                                break;
-                    case 'p':
-                                argp = printf_number(argp, length, sign);
-                                break;
-
-                    case 'o':
-                                argp = printf_number(argp, length, sign);
-                                break;
-
-                    // ignore invalid spec
-                    default:    break;
-                }
-
-                // reset state
-                state = PRINTF_STATE_NORMAL;
-                length = PRINTF_LENGTH_DEFAULT;
-                sign = false;
-                break;
         }
 
-        format++;
-    }
-}
-
-const char g_HexChars[] = "0123456789abcdef";
-
-static int* printf_number(int* argp, int length, int sign) {
-    char buffer[32];
-    unsigned long long number = NULL;
-
-    // process length
-    switch (length) {
-        case PRINTF_LENGTH_SHORT_SHORT:
-        case PRINTF_LENGTH_SHORT:
-        case PRINTF_LENGTH_DEFAULT:
-            if (sign) {
-                int n = *argp;
-                if (n < 0)
-                {
-                    n = -n;
-                }
-                number = (unsigned long long)n;
-            }
-            else {
-                number = *(unsigned int*)argp;
-            }
-            argp++;
-            break;
-
-        case PRINTF_LENGTH_LONG:
-            if (sign) {
-                long int n = *(long int*)argp;
-                if (n < 0)
-                {
-                    n = -n;
-                }
-                number = (unsigned long long)n;
-            }
-            else {
-                number = *(unsigned long int*)argp;
-            }
-            argp += 2;
-            break;
-
-        case PRINTF_LENGTH_LONG_LONG:
-            if (sign) {
-                long long int n = *(long long int*)argp;
-                if (n < 0)
-                {
-                    n = -n;
-                }
-                number = (unsigned long long)n;
-            }
-            else {
-                number = *(unsigned long long int*)argp;
-            }
-            argp += 4;
-            break;
     }
 
-    // convert number to ASCII
-    int_to_string(number, buffer);
-
-    putstr(buffer);
-
-    return argp;
 }

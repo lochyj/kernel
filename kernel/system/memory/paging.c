@@ -11,13 +11,13 @@ extern void cr0_enable_paging();
  */
 void install_paging(/*uint32_t memory_size*/) {
 
-	uint32_t page_directory[1024] __attribute__((aligned(4096)));
+	uint32_t kernel_directory[1024] __attribute__((aligned(4096)));
 	for (int i = 0; i < 1024; i++) {
 		// This sets the following flags to the pages:
 		//   Supervisor: Only kernel-mode can access them
 		//   Write Enabled: It can be both read from and written to
 		//   Not Present: The page table is not present
-		page_directory[i] = 0x00000002;
+		kernel_directory[i] = 0x00000002;
 	}
 
 	uint32_t first_page_table[1024] __attribute__((aligned(4096)));
@@ -31,12 +31,12 @@ void install_paging(/*uint32_t memory_size*/) {
 	}
 
 	// attributes: supervisor level, read/write, present
-	page_directory[0] = ((uint32_t)first_page_table) | 3;
+	kernel_directory[0] = ((uint32_t)first_page_table) | 3;
 
 	register_interrupt_handler(14, page_fault_handler);
 
 	// Pass the pointer to the page directory to the cr3 register and then enable paging.
-	cr3_load_paging_directory(&page_directory);
+	cr3_load_paging_directory(&kernel_directory);
 	cr0_enable_paging();
 
 }
