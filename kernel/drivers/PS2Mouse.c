@@ -133,10 +133,14 @@ void set_mouse_buttons(mouse_device_packet_t* packet, mouse_data_t* mouse_data) 
 }
 
 void mouse_write(uint8_t a_write) {
+
     //Tell the mouse we are sending a command
     mouse_wait(1);
+
     outb(0x64, 0xD4);
+
     mouse_wait(1);
+
     //Finally write
     outb(0x60, a_write);
 }
@@ -180,7 +184,8 @@ void init_mouse() {
     mouse_data.right_button_down = false;
     mouse_data.middle_button_down = false;
 
-    uint8_t _status;  //unsigned char
+    uint8_t _status;
+
     //Enable the auxiliary mouse device
     mouse_wait(1);
     outb(0x64, 0xA8);

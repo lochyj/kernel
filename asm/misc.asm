@@ -22,3 +22,9 @@ get_cpu_vendor_string:
     ; return the values
     mov eax, ebx
     ret
+
+global call_function_from_pointer
+call_function_from_pointer:
+    mov eax, [esp+4]
+    call eax
+    ret

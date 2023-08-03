@@ -21,7 +21,7 @@ void reverse(char str[], int length) {
 char* itoa(int num, char* str, int base) {
     int i = 0;
     bool isNegative = false;
- 
+
     /* Handle 0 explicitly, otherwise empty string is
      * printed for 0 */
     if (num == 0) {

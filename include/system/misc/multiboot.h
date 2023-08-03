@@ -44,6 +44,51 @@
 #define MULTIBOOT_INFO_VBE_INFO                 0x00000800
 #define MULTIBOOT_INFO_FRAMEBUFFER_INFO         0x00001000
 
+struct multiboot_header
+{
+  /* Must be MULTIBOOT_MAGIC - see above. */
+  uint32_t magic;
+
+  /* Feature flags. */
+  uint32_t flags;
+
+  /* The above fields plus this one must equal 0 mod 2^32. */
+  uint32_t checksum;
+
+  /* These are only valid if MULTIBOOT_AOUT_KLUDGE is set. */
+  uint32_t header_addr;
+  uint32_t load_addr;
+  uint32_t load_end_addr;
+  uint32_t bss_end_addr;
+  uint32_t entry_addr;
+
+  /* These are only valid if MULTIBOOT_VIDEO_MODE is set. */
+  uint32_t mode_type;
+  uint32_t width;
+  uint32_t height;
+  uint32_t depth;
+};
+
+/* The symbol table for a.out. */
+struct multiboot_aout_symbol_table
+{
+  uint32_t tabsize;
+  uint32_t strsize;
+  uint32_t addr;
+  uint32_t reserved;
+};
+typedef struct multiboot_aout_symbol_table multiboot_aout_symbol_table_t;
+
+/* The section header table for ELF. */
+struct multiboot_elf_section_header_table
+{
+  uint32_t num;
+  uint32_t size;
+  uint32_t addr;
+  uint32_t shndx;
+};
+typedef struct multiboot_elf_section_header_table multiboot_elf_section_header_table_t;
+
 typedef struct {
   /* Multiboot info version number */
   uint32_t flags;
@@ -58,14 +103,15 @@ typedef struct {
   /* Kernel command line */
   uint32_t cmdline;
 
+
   /* Boot-Module list */
   uint32_t mods_count;
   uint32_t mods_addr;
 
-  // We are only using ELF format, so we don't need A.OUT
-  uint32_t num;
-  uint32_t size;
-  uint32_t addr;
+  union {
+    multiboot_aout_symbol_table_t aout_sym;
+    multiboot_elf_section_header_table_t elf_sec;
+  } u;
 
   /* Memory Mapping buffer */
   uint32_t mmap_length;
@@ -91,11 +137,29 @@ typedef struct {
   uint16_t vbe_interface_seg;
   uint16_t vbe_interface_off;
   uint16_t vbe_interface_len;
+} multiboot_info_t;
 
-  uint64_t framebuffer_addr;
-  uint32_t framebuffer_pitch;
-  uint32_t framebuffer_width;
-  uint32_t framebuffer_height;
-  uint8_t framebuffer_bpp;
+struct multiboot_mmap_entry
+{
+  uint32_t size;
+  uint64_t addr;
+  uint64_t len;
+#define MULTIBOOT_MEMORY_AVAILABLE              1
+#define MULTIBOOT_MEMORY_RESERVED               2
+  uint32_t type;
+} __attribute__((packed));
+typedef struct multiboot_mmap_entry multiboot_memory_map_t;
 
-} __attribute__ ((packed)) multiboot_t;
+struct multiboot_mod_list
+{
+  /* the memory used goes from bytes 'mod_start' to 'mod_end-1' inclusive */
+  uint32_t mod_start;
+  uint32_t mod_end;
+
+  /* Module command line */
+  uint32_t cmdline;
+
+  /* padding to take it to 16 bytes (must be zero) */
+  uint32_t pad;
+};
+typedef struct multiboot_mod_list multiboot_module_t;

@@ -11,6 +11,8 @@ gdt_flush:
 	mov fs, ax
 	mov gs, ax
 	mov ss, ax
-	jmp 0x08:flush2
-flush2:
+	jmp 0x08:csflush
+
+; Why do we need this? Here: https://littleosbook.github.io/ -> 5.3
+csflush:
 	ret

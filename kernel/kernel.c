@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 
 #include "system/memory/gdt.h"
 #include "system/cpu/interrupts.h"
@@ -13,17 +14,22 @@
 const char* KERNEL_VERSION = "v0.1.1";
 const char* USER = "lochyj";
 
-void kmain(multiboot_t* multiboot_header, uint32_t multiboot_magic) {
+typedef int (*call_module_t)(void);
+
+void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 
    // Check if the bootloader is multiboot compliant
    if (multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC) {
       PANIC("Bootloader is not multiboot compliant!");
    }
 
+   uint32_t address_of_module = multiboot_header->mods_addr;
+
    // I think its ok to put this here? Its useful anyways.
 	initialise_console();
 
    printf("Total Memory: %dkb of memory available.\n", multiboot_header->mem_upper + multiboot_header->mem_lower);
+   printf("Location of module %d addr: 0x%x\n", multiboot_header->mods_count, address_of_module);
 
 	gdt_install();
 	printf("Loaded the GDT successfully!\n");
@@ -33,7 +39,7 @@ void kmain(multiboot_t* multiboot_header, uint32_t multiboot_magic) {
 
    //initialise_paging(multiboot_header->mem_upper + multiboot_header->mem_lower);
    install_paging();
-   //printf("Successfully initialized paging!\n");
+   printf("Successfully initialized paging!\n");
 
    // NOTE: you should initialize any interrupt handlers before sti
    // So register them here:
@@ -63,6 +69,9 @@ void kmain(multiboot_t* multiboot_header, uint32_t multiboot_magic) {
    printf("Kernel version %s; User: %s\n", KERNEL_VERSION, USER);
    printf("console@%s> ", USER);
    printf("\n");
+
+   call_module_t start_program = (call_module_t) address_of_module;
+   start_program();
 
    // Testing:
    //printf("\n\n");

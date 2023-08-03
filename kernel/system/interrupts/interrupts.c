@@ -33,6 +33,7 @@ char* exceptions_0_to_16[] = {
 
 // Register an interrupt handler function for a given interrupt.
 void register_interrupt_handler(uint8_t vector, isr_t handler) {
+    IRQ_clear_mask(vector);
     interrupt_handlers[vector] = handler;
 }
 
@@ -86,6 +87,7 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags
     // Uncomment the OR below when we get to using user-mode.
     // It sets the interrupt gate's privilege level to 3.
     idt_entries[num].flags   = flags /* | 0x60 */;
+
 }
 
 void idt_init() {
@@ -155,6 +157,8 @@ void idt_init() {
     idt_set_gate(45, (uint32_t)irq13, 0x08, 0x8E);
     idt_set_gate(46, (uint32_t)irq14, 0x08, 0x8E);
     idt_set_gate(47, (uint32_t)irq15, 0x08, 0x8E);
+
+    IRQ_set_all_mask();
 
     idt_flush((uint32_t)&idt_ptr);
 }
