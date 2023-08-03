@@ -14,7 +14,7 @@
 const char* KERNEL_VERSION = "v0.1.1";
 const char* USER = "lochyj";
 
-typedef int (*call_module_t)(void);
+extern void call_function_from_pointer(uintptr_t);
 
 void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 
@@ -38,7 +38,7 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 	printf("Loaded the IDT and ISR successfully!\n");
 
    //initialise_paging(multiboot_header->mem_upper + multiboot_header->mem_lower);
-   install_paging();
+   paging_init();
    printf("Successfully initialized paging!\n");
 
    // NOTE: you should initialize any interrupt handlers before sti
@@ -70,8 +70,7 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
    printf("console@%s> ", USER);
    printf("\n");
 
-   call_module_t start_program = (call_module_t) address_of_module;
-   start_program();
+   call_function_from_pointer(address_of_module);
 
    // Testing:
    //printf("\n\n");

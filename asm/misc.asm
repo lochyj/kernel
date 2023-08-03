@@ -17,8 +17,8 @@ get_cpu_vendor_string:
     mov eax, 0x0
     cpuid
     mov [ebx], eax
-    mov [ebx+4], ebx
-    mov [ebx+8], ecx
+    mov [ebx + 4], ebx
+    mov [ebx + 8], ecx
     ; return the values
     mov eax, ebx
     ret
@@ -26,5 +26,5 @@ get_cpu_vendor_string:
 global call_function_from_pointer
 call_function_from_pointer:
     mov eax, [esp+4]
-    call eax
+    jmp eax
     ret

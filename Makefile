@@ -2,7 +2,7 @@
 
 # Future: $(shell find . -name '*.c')
 
-C_SOURCES = $(wildcard kernel/*.c lib/blink/*.c kernel/system/debug/*.c kernel/drivers/*.c lib/libc/string/*.c lib/libc/stdio/*.c kernel/system/memory/*.c kernel/system/interrupts/*.c kernel/system/pit/*.c)
+C_SOURCES = $(wildcard kernel/*.c lib/libc/math/*.c kernel/system/debug/*.c kernel/drivers/*.c lib/libc/string/*.c lib/libc/stdio/*.c kernel/system/memory/*.c kernel/system/interrupts/*.c kernel/system/pit/*.c)
 ASM_SOURCES = $(wildcard asm/*.asm)
 
 APPS_ASM_SOURCES = $(wildcard apps/*.asm)

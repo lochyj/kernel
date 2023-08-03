@@ -3,6 +3,7 @@
         "*.ejs": "html",
         "*.h": "c",
         "*.c": "c",
-        "ratio": "c"
+        "ratio": "c",
+        "compare": "c"
     }
 }
