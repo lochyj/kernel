@@ -35,7 +35,7 @@ enum {
     CAPS_LOCK = 0x3A,
 };
 
-static void keyboard_callback(registers_t *regs) {
+void keyboard_callback(registers_t *regs) {
     uint8_t scancode = inb(0x60);
 
     if (scancode == LEFT_SHIFT + 0x80 || scancode == RIGHT_SHIFT + 0x80 || scancode == LEFT_CONTROL + 0x80 || scancode == LEFT_ALT + 0x80) {

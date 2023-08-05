@@ -159,6 +159,7 @@ void idt_init() {
     idt_set_gate(47, (uint32_t)irq15, 0x08, 0x8E);
 
     IRQ_set_all_mask();
+    IRQ_clear_mask(IRQ2);
 
     idt_flush((uint32_t)&idt_ptr);
 }

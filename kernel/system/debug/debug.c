@@ -48,18 +48,14 @@ char* __DEBUG_itoa(int val, int base) {
 	int i = 30;
 	
 	for (; val && i ; --i, val /= base)
-	
 		buf[i] = "0123456789abcdef"[val % base];
 	
 	return &buf[i+1];
-	
-}
 
-void __DEBUG_halt() {
-    asm volatile("cli; hlt");
 }
 
 void __DEBUG_PANIC(const char* file, int line, const char* message) {
+
     int offset = __DEBUG_print("KERNEL PANIC | At File: ", 0);
 
     offset = __DEBUG_print(file, offset);
@@ -69,14 +65,21 @@ void __DEBUG_PANIC(const char* file, int line, const char* message) {
 
     __DEBUG_print(message, offset);
     __DEBUG_halt();
+
 }
 
 void __DEBUG_ERROR(const char* file, int line) {
 
     int offset = __DEBUG_print("ASSERTION FAILED | At File: ", 0);
+
     offset = __DEBUG_print(file, offset);
     offset = __DEBUG_print(" | On Line: ", offset);
 
     __DEBUG_print(__DEBUG_itoa(line, 10), offset);
     __DEBUG_halt();
+
+}
+
+void __DEBUG_halt() {
+    asm volatile("cli; hlt");
 }

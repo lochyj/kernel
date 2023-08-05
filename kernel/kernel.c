@@ -7,7 +7,7 @@
 #include "system/drivers/keyboard.h"
 #include "system/drivers/mouse.h"
 #include "system/misc/multiboot.h"
-#include "system/memory/paging.h"
+#include "system/memory/mem.h"
 
 #include "system/debug/debug.h"
 
@@ -37,9 +37,11 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 	idt_init();
 	printf("Loaded the IDT and ISR successfully!\n");
 
-   //initialise_paging(multiboot_header->mem_upper + multiboot_header->mem_lower);
-   paging_init();
+   paging_install(multiboot_header->mem_upper + multiboot_header->mem_lower);
    printf("Successfully initialized paging!\n");
+
+   heap_install();
+   printf("Successfully installed the heap!\n");
 
    // NOTE: you should initialize any interrupt handlers before sti
    // So register them here:
@@ -57,6 +59,7 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 
    // ---
 
+   // Enable interrupts
    asm volatile("sti");
    printf("Successfully enabled interrupts!\n");
 
@@ -68,9 +71,7 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
    printf("|____/|_|_|_| |_|_|\\_\\\\____/|_____/\n");
    printf("Kernel version %s; User: %s\n", KERNEL_VERSION, USER);
    printf("console@%s> ", USER);
-   printf("\n");
-
-   call_function_from_pointer(address_of_module);
+   //printf("\n");
 
    // Testing:
    //printf("\n\n");
@@ -79,7 +80,8 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
    //begin_timer(100);
    // ---
 
-   for (;;)
+   for (;;) {
       asm volatile("nop");
+   }
 
 }
