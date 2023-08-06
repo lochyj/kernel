@@ -16,6 +16,43 @@ const char* USER = "lochyj";
 
 extern void call_function_from_pointer(uintptr_t);
 
+
+uint32_t FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGH, FRAMEBUFFER_BPP, FRAMEBUFFER_PITCH;
+uint8_t* FRAME_BUFFER;
+
+void put_pixel(unsigned int x, unsigned int y, uint32_t color) {
+
+   if (x >= FRAMEBUFFER_WIDTH || y >= FRAMEBUFFER_HEIGH)
+      return;
+
+
+   uint8_t r = color >> 16;
+   uint8_t g = color >> 8;
+   uint8_t b = color;
+
+
+
+   unsigned where = x * (FRAMEBUFFER_BPP / 8) + y * FRAMEBUFFER_PITCH;
+   FRAME_BUFFER[where + 0] = b;
+   FRAME_BUFFER[where + 1] = g;
+   FRAME_BUFFER[where + 2] = r;
+
+}
+/*
+Initializing VESA mode. You'll need a Multiboot struct to work, because it's using info from it.
+*/
+void initialise_VBE(multiboot_info_t *multiboot_header) {
+   FRAME_BUFFER = (uint8_t*)(int)(multiboot_header->framebuffer_addr);
+
+   FRAMEBUFFER_PITCH = multiboot_header->framebuffer_pitch;
+
+   FRAMEBUFFER_BPP = multiboot_header->framebuffer_bpp;
+
+   FRAMEBUFFER_WIDTH = multiboot_header->framebuffer_width;
+   FRAMEBUFFER_HEIGH = multiboot_header->framebuffer_height;
+
+}
+
 void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 
    // Check if the bootloader is multiboot compliant
@@ -23,13 +60,30 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
       PANIC("Bootloader is not multiboot compliant!");
    }
 
+   // Text mode check
+   if(multiboot_header->framebuffer_type == 1) {
+      // It isn't a text mode.
+
+      initialise_VBE(multiboot_header);
+
+      for (int i = 100; i < 200; i++) {
+         for (int j = 100; j < 200; j++) {
+            put_pixel(i, j, 0xFFFFFF);
+         }
+      }
+
+      for(;;);
+	}
+
    uint32_t address_of_module = multiboot_header->mods_addr;
+
 
    // I think its ok to put this here? Its useful anyways.
 	initialise_console();
 
    printf("Total Memory: %dkb of memory available.\n", multiboot_header->mem_upper + multiboot_header->mem_lower);
    printf("Location of module %d addr: 0x%x\n", multiboot_header->mods_count, address_of_module);
+   printf("VBE Video mode info: %d\n", multiboot_header->vbe_mode_info);
 
 	gdt_install();
 	printf("Loaded the GDT successfully!\n");
