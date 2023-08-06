@@ -5,5 +5,7 @@
         "*.c": "c",
         "ratio": "c",
         "compare": "c"
-    }
+    },
+    "C_Cpp.intelliSenseEngineFallback": "disabled",
+    "C_Cpp.errorSquiggles": "enabled"
 }

@@ -8,16 +8,9 @@ uint8_t mouse_cycle = 0;
 int8_t  mouse_byte[3];
 mouse_data_t mouse_data;
 
-#define PACKETS_IN_PIPE 1024
-#define DISCARD_POINT 32
-
-#define MOUSE_IRQ 12
-
 #define MOUSE_PORT   0x60
 #define MOUSE_STATUS 0x64
-#define MOUSE_ABIT   0x02
 #define MOUSE_BBIT   0x01
-#define MOUSE_WRITE  0xD4
 #define MOUSE_F_BIT  0x20
 #define MOUSE_V_BIT  0x08
 
