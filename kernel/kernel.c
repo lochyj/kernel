@@ -17,6 +17,15 @@ const char* USER = "lochyj";
 
 extern void call_function_from_pointer(uintptr_t);
 
+typedef struct {
+   bool is_text_mode;
+   vesa_info_t vesa_info;
+
+   uint32_t mem_lower;
+   uint32_t mem_upper;
+
+} kernel_info_t;
+
 void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 
    // Check if the bootloader is multiboot compliant
@@ -30,11 +39,9 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 
       initialise_VBE(multiboot_header);
 
-      for (int i = 100; i < 200; i++) {
-         for (int j = 100; j < 200; j++) {
-            put_pixel(i, j, 0xFFFFFF);
-         }
-      }
+      vga_print_string("Hello, World!\nGoodbye, World!");
+
+      
 
       for(;;);
 	}
