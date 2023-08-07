@@ -158,8 +158,7 @@ void idt_init() {
     idt_set_gate(46, (uint32_t)irq14, 0x08, 0x8E);
     idt_set_gate(47, (uint32_t)irq15, 0x08, 0x8E);
 
-    IRQ_set_all_mask();
-    IRQ_clear_mask(IRQ2);
+    IRQ_clear_all_mask();
 
     idt_flush((uint32_t)&idt_ptr);
 }
@@ -169,6 +168,12 @@ void idt_init() {
 void IRQ_set_all_mask() {
     for (int8_t i = 0; i < 16; i++){
         IRQ_set_mask(i);
+    }
+}
+
+void IRQ_clear_all_mask() {
+    for (int8_t i = 0; i < 16; i++){
+        IRQ_clear_mask(i);
     }
 }
 

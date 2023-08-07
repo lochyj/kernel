@@ -17,15 +17,6 @@ const char* USER = "lochyj";
 
 extern void call_function_from_pointer(uintptr_t);
 
-typedef struct {
-   bool is_text_mode;
-   vesa_info_t vesa_info;
-
-   uint32_t mem_lower;
-   uint32_t mem_upper;
-
-} kernel_info_t;
-
 void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 
    // Check if the bootloader is multiboot compliant
@@ -39,9 +30,19 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 
       initialise_VBE(multiboot_header);
 
+      vga_print_string(" ____  _ _       _     ____   _____\n");
+      vga_print_string("|  _ \\| (_)     | |   / __ \\ / ____|\n");
+      vga_print_string("| |_) | |_ _ __ | | _| |  | | (___\n");
+      vga_print_string("|  _ <| | | '_ \\| |/ / |  | |\\___ \\ \n");
+      vga_print_string("| |_) | | | | | |   <| |__| |____) |\n");
+      vga_print_string("|____/|_|_|_| |_|_|\\_\\\\____/|_____/\n");
+
       vga_print_string("Hello, World!\nGoodbye, World!");
 
-      
+      // TODO: fix the error
+      // vga_print_string("testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest");
+
+      draw_rounded_rectangle(200, 400, 300, 300, 20, 0xFFFFFF);
 
       for(;;);
 	}

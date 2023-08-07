@@ -125,6 +125,68 @@ void put_pixel(uint32_t x, uint32_t y, uint32_t color) {
 
 }
 
+//TODO: format this code better
+void draw_circle_quadrant(uint32_t cx, uint32_t cy, uint32_t x, uint32_t y, uint32_t color) {
+   put_pixel(cx + x, cy + y, color);
+   put_pixel(cx - x, cy + y, color);
+   put_pixel(cx + x, cy - y, color);
+   put_pixel(cx - x, cy - y, color);
+}
+
+void draw_rounded_rectangle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t radius, uint32_t color) {
+
+   int32_t error = -radius;
+   int32_t x_pos = radius;
+   int32_t y_pos = 0;
+
+   while (x_pos >= y_pos) {
+      draw_circle_quadrant(x + radius, y + radius, x_pos, y_pos, color);
+      draw_circle_quadrant(x + width - radius - 1, y + radius, x_pos, y_pos, color);
+      draw_circle_quadrant(x + width - radius - 1, y + height - radius - 1, x_pos, y_pos, color);
+      draw_circle_quadrant(x + radius, y + height - radius - 1, x_pos, y_pos, color);
+
+      draw_circle_quadrant(x + radius, y + radius, y_pos, x_pos, color);
+      draw_circle_quadrant(x + width - radius - 1, y + radius, y_pos, x_pos, color);
+      draw_circle_quadrant(x + width - radius - 1, y + height - radius - 1, y_pos, x_pos, color);
+      draw_circle_quadrant(x + radius, y + height - radius - 1, y_pos, x_pos, color);
+
+      error += y_pos;
+      ++y_pos;
+      error += y_pos;
+
+      if (error >= 0) {
+         --x_pos;
+         error -= x_pos;
+         error -= x_pos;
+      }
+   }
+
+   // Fill the rounded corners with the specified color
+   for (int32_t i = 0; i < (int32_t)radius; ++i) {
+      for (int32_t j = 0; j < (int32_t)radius; ++j) {
+         if (i * i + j * j < radius * radius) {
+            put_pixel(x + radius - i - 1, y + radius - j - 1, color);         // Top-left corner
+            put_pixel(x + width - radius + i, y + radius - j - 1, color);     // Top-right corner
+            put_pixel(x + width - radius + i, y + height - radius + j, color); // Bottom-right corner
+            put_pixel(x + radius - i - 1, y + height - radius + j, color);    // Bottom-left corner
+         }
+      }
+   }
+
+   // Fill the remaining area inside the rounded rectangle
+   for (uint32_t i = x + radius; i < x + width - radius; ++i) {
+      for (uint32_t j = y; j < y + height; ++j) {
+         put_pixel(i, j, color);
+      }
+   }
+
+   for (uint32_t i = x; i < x + width; ++i) {
+      for (uint32_t j = y + radius; j < y + height - radius; ++j) {
+         put_pixel(i, j, color);
+      }
+   }
+}
+
 void initialise_VBE(multiboot_info_t *multiboot_header) {
 
    VESA_INFO.framebuffer_pointer = (uint8_t*)(int32_t)(multiboot_header->framebuffer_addr);
@@ -171,7 +233,14 @@ void draw_character(uint32_t x, uint32_t y, uint32_t scale, uint32_t colour, uin
 
    // 8x16 font
    x = x * scale * 8;
+
+   if (x >= VESA_INFO.framebuffer_width || y >= VESA_INFO.framebuffer_height) {
+      y += 1;
+      x = 0;
+   }
+
    y = y * scale * 16;
+
 
    for (int j = 0; j < 16; j++) {
 
