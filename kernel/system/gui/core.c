@@ -125,6 +125,28 @@ void put_pixel(uint32_t x, uint32_t y, uint32_t color) {
 
 }
 
+uint32_t put_pixel_return(uint32_t x, uint32_t y, uint32_t color) {
+   // Like put_pixel except it returns the colour value of the pixel it replaced before overriding it
+
+   if (x >= VESA_INFO.framebuffer_width || y >= VESA_INFO.framebuffer_height)
+      return 0;
+
+   uint8_t r = color >> 16;
+   uint8_t g = color >> 8;
+   uint8_t b = color;
+
+   uint32_t where = x * (VESA_INFO.framebuffer_bpp / 8) + y * VESA_INFO.framebuffer_pitch;
+
+   uint32_t old_color = (VESA_INFO.framebuffer_pointer[where + 0] << 16) | (VESA_INFO.framebuffer_pointer[where + 1] << 8) | (VESA_INFO.framebuffer_pointer[where + 2]);
+
+   VESA_INFO.framebuffer_pointer[where + 0] = b;
+   VESA_INFO.framebuffer_pointer[where + 1] = g;
+   VESA_INFO.framebuffer_pointer[where + 2] = r;
+
+   return old_color;
+
+}
+
 //TODO: format this code better
 void draw_circle_quadrant(uint32_t cx, uint32_t cy, uint32_t x, uint32_t y, uint32_t color) {
    put_pixel(cx + x, cy + y, color);
@@ -207,6 +229,45 @@ void draw_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t
       for (uint32_t j = y; j < y + height; j++) {
          put_pixel(i, j, colour);
       }
+   }
+
+}
+
+uint32_t cursor_behind[100];
+uint32_t old_x, old_y;
+
+void draw_cursor(uint32_t x, uint32_t y, uint32_t colour) {
+   // draw a 10x10 rect but return the colour of the pixel it replaced
+
+   // replace the pixels behind the cursor
+   uint32_t iter = 0;
+   for (uint32_t i = old_x; i < old_x + 10; i++) {
+      for (uint32_t j = old_y; j < old_y + 10; j++) {
+         put_pixel(i, j, cursor_behind[iter]);
+         iter++;
+      }
+   }
+
+   old_x = x;
+   old_y = y;
+
+   iter = 0;
+   for (uint32_t i = x; i < x + 10; i++) {
+      for (uint32_t j = y; j < y + 10; j++) {
+         cursor_behind[iter] = put_pixel_return(i, j, colour);
+         iter++;
+      }
+   }
+
+   // outline the cursor with a black color, still within the 10x10
+   for (uint32_t i = x; i < x + 10; i++) {
+      put_pixel(i, y, 0x000000);
+      put_pixel(i, y + 9, 0x000000);
+   }
+
+   for (uint32_t i = y; i < y + 10; i++) {
+      put_pixel(x, i, 0x000000);
+      put_pixel(x + 9, i, 0x000000);
    }
 
 }

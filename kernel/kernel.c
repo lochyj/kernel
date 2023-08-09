@@ -17,6 +17,19 @@ const char* USER = "lochyj";
 
 extern void call_function_from_pointer(uintptr_t);
 
+char* __itoa(int val, int base) {
+
+	static char buf[32] = {0};
+
+	int i = 30;
+
+	for (; val && i ; --i, val /= base)
+		buf[i] = "0123456789abcdef"[val % base];
+
+	return &buf[i+1];
+
+}
+
 void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 
    // Check if the bootloader is multiboot compliant
@@ -42,20 +55,48 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
       // TODO: fix the error
       // vga_print_string("testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest");
 
-      draw_rounded_rectangle(200, 400, 300, 300, 20, 0xFFFFFF);
+      vga_print_string("\nWidth:");
+      vga_print_string(__itoa(multiboot_header->framebuffer_width, 10));
+      vga_print_string("\nHeight:");
+      vga_print_string(__itoa(multiboot_header->framebuffer_height, 10));
+      vga_print_string("\n");
+
+      draw_rounded_rectangle(600, 600, 300, 100, 5, 0xFFFFFF);
+
+      gdt_install();
+      vga_print_string("Loaded the GDT successfully!\n");
+
+      idt_init();
+      vga_print_string("Loaded the IDT and ISR successfully!\n");
+
+
+      // NOTE: you should initialize any interrupt handlers before sti
+      // So register them here:
+      //register_PIT();
+
+      init_keyboard();
+      vga_print_string("Initialized the PS/2 keyboard driver successfully!\n");
+
+      init_mouse();
+      vga_print_string("Initialized the PS/2 mouse driver successfully!\n");
+
+      // For debugging and visualizing mouse position:
+      set_mouse_logging(false);
+
+      // Enable interrupts
+      asm volatile("sti");
 
       for(;;);
+
 	}
 
    uint32_t address_of_module = multiboot_header->mods_addr;
-
 
    // I think its ok to put this here? Its useful anyways.
 	initialise_console();
 
    printf("Total Memory: %dkb of memory available.\n", multiboot_header->mem_upper + multiboot_header->mem_lower);
    printf("Location of module %d addr: 0x%x\n", multiboot_header->mods_count, address_of_module);
-   printf("VBE Video mode info: %d\n", multiboot_header->vbe_mode_info);
 
 	gdt_install();
 	printf("Loaded the GDT successfully!\n");

@@ -65,11 +65,15 @@ void mouse_handler(isr_t* r) {
                         print_mouse_data(&mouse_data);
                     }
 
+                    draw_cursor(mouse_data.x, mouse_data.y, 0xFFFFFF);
+
 					break;
 			}
 		}
 		status = inb(MOUSE_STATUS);
 	}
+
+
 }
 
 void print_mouse_data(mouse_data_t* mouse_data) {
@@ -171,8 +175,8 @@ void init_mouse() {
 
     mouse_data.log_mouse_data = false;
 
-    mouse_data.x = 0;
-    mouse_data.y = 0;
+    mouse_data.x = 300;
+    mouse_data.y = 200;
     mouse_data.left_button_down = false;
     mouse_data.right_button_down = false;
     mouse_data.middle_button_down = false;

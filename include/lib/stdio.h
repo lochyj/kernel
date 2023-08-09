@@ -5,5 +5,6 @@
 #include <stdarg.h>
 
 #include "system/drivers/console.h"
+#include "system/gui/core.h"
 
 void printf(const char* format, ...);
