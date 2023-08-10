@@ -7,7 +7,6 @@
 #include "system/drivers/pic.h"
 #include "system/cpu/interrupts.h"
 #include "system/debug/debug.h"
-#include "system/gui/core.h"
 
 typedef enum {
 	LEFT_CLICK   = 0x01,

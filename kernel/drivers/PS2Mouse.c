@@ -65,8 +65,6 @@ void mouse_handler(isr_t* r) {
                         print_mouse_data(&mouse_data);
                     }
 
-                    draw_cursor(mouse_data.x, mouse_data.y, 0xFFFFFF);
-
 					break;
 			}
 		}

@@ -8,7 +8,7 @@
 #include "system/drivers/mouse.h"
 #include "system/misc/multiboot.h"
 #include "system/memory/mem.h"
-#include "system/gui/core.h"
+#include "system/gui/corev2.h"
 
 #include "system/debug/debug.h"
 
@@ -42,49 +42,35 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
       // It isn't a text mode.
 
       initialise_VBE(multiboot_header);
-
-      vga_print_string(" ____  _ _       _     ____   _____\n");
-      vga_print_string("|  _ \\| (_)     | |   / __ \\ / ____|\n");
-      vga_print_string("| |_) | |_ _ __ | | _| |  | | (___\n");
-      vga_print_string("|  _ <| | | '_ \\| |/ / |  | |\\___ \\ \n");
-      vga_print_string("| |_) | | | | | |   <| |__| |____) |\n");
-      vga_print_string("|____/|_|_|_| |_|_|\\_\\\\____/|_____/\n");
-
-      vga_print_string("Hello, World!\nGoodbye, World!");
-
-      // TODO: fix the error
-      // vga_print_string("testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest");
-
-      vga_print_string("\nWidth:");
-      vga_print_string(__itoa(multiboot_header->framebuffer_width, 10));
-      vga_print_string("\nHeight:");
-      vga_print_string(__itoa(multiboot_header->framebuffer_height, 10));
-      vga_print_string("\n");
-
-      draw_rounded_rectangle(600, 600, 300, 100, 5, 0xFFFFFF);
-
       gdt_install();
-      vga_print_string("Loaded the GDT successfully!\n");
-
       idt_init();
-      vga_print_string("Loaded the IDT and ISR successfully!\n");
-
-
-      // NOTE: you should initialize any interrupt handlers before sti
-      // So register them here:
-      //register_PIT();
-
       init_keyboard();
-      vga_print_string("Initialized the PS/2 keyboard driver successfully!\n");
-
       init_mouse();
-      vga_print_string("Initialized the PS/2 mouse driver successfully!\n");
-
-      // For debugging and visualizing mouse position:
       set_mouse_logging(false);
-
-      // Enable interrupts
       asm volatile("sti");
+
+      window_t* green_window = create_window(100, 100, 200, 200, "Green Window");
+      rect_t green_window_background = {0, 0, 200, 200, 0x00FF00};
+      draw_rect(green_window->ctx, &green_window_background);
+
+      rect_t green_window_test = {50, 50, 100, 100, 0xFF0000};
+      draw_rect(green_window->ctx, &green_window_test);
+
+      render_window(green_window);
+
+
+      window_t* red_window = create_window(400, 100, 200, 200, "Red Window");
+      rect_t red_window_background = {0, 0, 200, 200, 0xFF0000};
+      draw_rect(red_window->ctx, &red_window_background);
+
+      rect_t red_window_test = {50, 50, 100, 100, 0x00FF00};
+      draw_rect(red_window->ctx, &red_window_test);
+
+      render_window(red_window);
+
+      draw_buffer_copy_to_global();
+
+      //draw_cursor(100, 100);
 
       for(;;);
 
