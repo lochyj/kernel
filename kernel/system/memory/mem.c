@@ -1,39 +1,44 @@
 #include "system/memory/mem.h"
 
+// ----------------------|
+// Variables and Helpers |
+// ----------------------|
+
 extern void copy_page_physical(uint32_t, uint32_t);
+
+uint32_t *frames;
+uint32_t nframes;
 
 #define KERNEL_HEAP_END 0x02000000
 
-extern void *end;
-uintptr_t placement_pointer = (uintptr_t)&end;
-uintptr_t heap_end = (uintptr_t)NULL;
+#define INDEX_FROM_BIT(b) (b / 0x20)
+#define OFFSET_FROM_BIT(b) (b % 0x20)
+
+extern void* end;
+uintptr_t placement_pointer = (uintptr_t) &end;
+uintptr_t heap_end = (uintptr_t) NULL;
 
 page_directory_t *kernel_directory;
 page_directory_t *current_directory;
 
-void kmalloc_startat(uintptr_t address) {
 
-	placement_pointer = address;
+// --------|
+// Kmalloc |
+// --------|
 
-}
-
-/*
- * kmalloc() is the kernel's dumb placement allocator
- */
-uintptr_t kmalloc_real(size_t size, int align, uintptr_t* phys) {
-	/*if (heap_end) {
-		void * address;
-		if (align) {
-			address = valloc(size);
-		} else {
-			address = malloc(size);
+void* kmalloc_real(size_t size, int align, uintptr_t* phys) {
+	if (heap_end != NULL) {
+		if (align && (heap_end & 0xFFFFF000)) {
+			heap_end &= 0xFFFFF000;
+			heap_end += 0x1000;
 		}
 		if (phys) {
-			page_t *page = get_page((uintptr_t)address, 0, kernel_directory);
-			*phys = page->frame * 0x1000 + ((uintptr_t)address & 0xFFF);
+			*phys = heap_end;
 		}
-		return (uintptr_t)address;
-	}*/
+		uintptr_t address = heap_end;
+		heap_end += size;
+		return (uintptr_t) address;
+	}
 
 	if (align && (placement_pointer & 0xFFFFF000)) {
 		placement_pointer &= 0xFFFFF000;
@@ -42,58 +47,39 @@ uintptr_t kmalloc_real(size_t size, int align, uintptr_t* phys) {
 	if (phys) {
 		*phys = placement_pointer;
 	}
-	uintptr_t address = placement_pointer;
+	void* address = placement_pointer;
 	placement_pointer += size;
-	return (uintptr_t)address;
+	return (void*)address;
 }
 
-/*
- * Normal
- */
-uintptr_t kmalloc(size_t size) {
+void* kmalloc(size_t size) {
 
 	return kmalloc_real(size, 0, NULL);
 
 }
 
-/*
- * Aligned
- */
-uintptr_t kvmalloc(size_t size) {
+void* kvmalloc(size_t size) {
 
 	return kmalloc_real(size, 1, NULL);
 
 }
 
-/*
- * With a physical address
- */
-uintptr_t kmalloc_p(size_t size, uintptr_t *phys) {
+void* kmalloc_p(size_t size, uintptr_t *phys) {
 
 	return kmalloc_real(size, 0, phys);
 
 }
 
-/*
- * Aligned, with a physical address
- */
-uintptr_t kvmalloc_p(size_t size, uintptr_t *phys) {
+void* kvmalloc_p(size_t size, uintptr_t *phys) {
 
 	return kmalloc_real(size, 1, phys);
 
 }
 
 
-
-/*
- * Frame Allocation
- */
-
-uint32_t *frames;
-uint32_t nframes;
-
-#define INDEX_FROM_BIT(b) (b / 0x20)
-#define OFFSET_FROM_BIT(b) (b % 0x20)
+// -----------------|
+// Frame allocation |
+// -----------------|
 
 void set_frame(uintptr_t frame_addr) {
 
@@ -200,6 +186,11 @@ void free_frame(page_t *page) {
 	}
 }
 
+
+// ------------------|
+// Utility functions |
+// ------------------|
+
 uintptr_t memory_use() {
 
 	uintptr_t ret = 0;
@@ -230,6 +221,11 @@ uintptr_t memory_total() {
 	return nframes * 4;
 
 }
+
+
+// -------|
+// Paging |
+// -------|
 
 void paging_install(uint32_t memsize) {
 
@@ -266,14 +262,14 @@ void paging_install(uint32_t memsize) {
 
 	/* Kernel Heap Space */
 	for (i = placement_pointer; i < KERNEL_HEAP_END; i += 0x1000) {
-
 		alloc_frame(get_page(i, 1, kernel_directory), 1, 0);
-
 	}
 
 	current_directory = clone_directory(kernel_directory);
 
 	switch_page_directory(kernel_directory);
+
+	heap_install();
 
 }
 
@@ -376,31 +372,6 @@ page_table_t* clone_table(page_table_t* src, uintptr_t* physAddr) {
 
 }
 
-void debug_print_directory() {
-
-	printf(" ---- [k:0x%x u:0x%x]", kernel_directory, current_directory);
-
-	for (uintptr_t i = 0; i < 1024; ++i) {
-
-		if (!current_directory->tables[i] || (uintptr_t)current_directory->tables[i] == (uintptr_t)0xFFFFFFFF)
-			continue;
-
-		if (kernel_directory->tables[i] == current_directory->tables[i]) {
-
-			printf("  0x%x - kern [0x%x/0x%x] 0x%x", current_directory->tables[i], &current_directory->tables[i], &kernel_directory->tables[i], i * 0x1000 * 1024);
-
-		} else {
-
-			printf("  0x%x - user [0x%x] 0x%x [0x%x]", current_directory->tables[i], &current_directory->tables[i], i * 0x1000 * 1024, kernel_directory->tables[i]);
-
-		}
-
-	}
-
-	printf(" ---- [done]");
-
-}
-
 void switch_page_directory(page_directory_t * dir) {
 
 	current_directory = dir;
@@ -464,16 +435,6 @@ void page_fault(registers_t *r) {
 	PANIC("Page fault");
 
 }
-
-
-
-/*
- * Heap
- * Stop using kalloc and friends after installing the heap
- * otherwise shit will break. I've conveniently broken
- * kalloc when installing the heap, just for those of you
- * who feel the need to screw up.
- */
 
 void heap_install() {
 

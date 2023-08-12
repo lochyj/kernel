@@ -15,21 +15,6 @@
 const char* KERNEL_VERSION = "v0.1.1";
 const char* USER = "lochyj";
 
-extern void call_function_from_pointer(uintptr_t);
-
-char* __itoa(int val, int base) {
-
-	static char buf[32] = {0};
-
-	int i = 30;
-
-	for (; val && i ; --i, val /= base)
-		buf[i] = "0123456789abcdef"[val % base];
-
-	return &buf[i+1];
-
-}
-
 void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 
    // Check if the bootloader is multiboot compliant
@@ -91,10 +76,7 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t multiboot_magic) {
 	printf("Loaded the IDT and ISR successfully!\n");
 
    paging_install(multiboot_header->mem_upper + multiboot_header->mem_lower);
-   printf("Successfully initialized paging!\n");
-
-   heap_install();
-   printf("Successfully installed the heap!\n");
+   printf("Successfully initialized paging and installed the heap!\n");
 
    // NOTE: you should initialize any interrupt handlers before sti
    // So register them here:

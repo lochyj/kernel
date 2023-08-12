@@ -31,7 +31,7 @@ typedef struct page_directory {
 	int32_t ref_count;
 } page_directory_t;
 
-uintptr_t kmalloc(size_t size);
+void* kmalloc(size_t size);
 
 extern void set_frame(uintptr_t frame_addr);
 extern void clear_frame(uintptr_t frame_addr);
@@ -42,13 +42,9 @@ void page_fault(registers_t *r);
 
 void heap_install();
 
-void* sbrk(uintptr_t increment);
-
 page_t *get_page(uintptr_t address, int make, page_directory_t * dir);
 
 void switch_page_directory(page_directory_t * dir);
-
-void debug_print_directory();
 
 void paging_install(uint32_t memsize);
 
