@@ -11,5 +11,7 @@
     "cSpell.words": [
         "framebuffer",
         "userspace"
-    ]
+    ],
+    "editor.indentSize": "tabSize",
+    "editor.tabSize": 4
 }

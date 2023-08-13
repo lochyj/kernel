@@ -26,7 +26,7 @@ void draw_window_decoration(window_t* window) {
 
    global_draw_rect(window->x - 1, window->y, 1, window->height, 0x000000);
 
-      global_draw_rect(window->x - 1, window->y + window->height, window->width + 2, 1, 0x000000);
+   global_draw_rect(window->x - 1, window->y + window->height, window->width + 2, 1, 0x000000);
 
 
 }
@@ -35,8 +35,6 @@ void render_window(window_t* window) {
 
    draw_window_decoration(window);
    render_context_to_global(window->ctx, window->x, window->y);
-
-   draw_buffer_copy_to_global();
 
 }
 

@@ -127,10 +127,7 @@ extern framebuffer_info_t FRAMEBUFFER_INFO;
 void initialise_VBE(multiboot_info_t *multiboot_header);
 void buffer_clear(uint32_t colour);
 
-void draw_buffer_copy_to_global();
-
 void put_pixel_global(uint32_t x, uint32_t y, uint32_t color);
-void put_pixel_global_copy(uint32_t x, uint32_t y, uint32_t color);
 
 void render_context_to_global(render_context_t* ctx, uint32_t offset_x, uint32_t offset_y);
 void initialize_render_context(render_context_t* ctx, uint32_t width, uint32_t height, uint32_t x, uint32_t y /*, uint8_t order*/);

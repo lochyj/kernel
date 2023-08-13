@@ -31,6 +31,8 @@ typedef struct page_directory {
 	int32_t ref_count;
 } page_directory_t;
 
+extern uintptr_t placement_pointer;
+
 void* kmalloc(size_t size);
 
 extern void set_frame(uintptr_t frame_addr);

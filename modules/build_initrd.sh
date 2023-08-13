@@ -1,0 +1,1 @@
+gcc -o ./build/create_initrd create_initrd.c

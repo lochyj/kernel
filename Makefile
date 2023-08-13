@@ -9,6 +9,9 @@ all: kernel
 # mboot buildiso run clean
 
 kernel:
+#	Copy the initrd to the build directory
+	cp ./modules/build/initrd.img ./build/iso/boot/initrd.img
+
 #	Change to the kernel directory for simplicity
 	cd light && make
 

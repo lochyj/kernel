@@ -7,6 +7,7 @@ C_SOURCES = $(wildcard kernel/*.c kernel/irq/*.c kernel/time/*.c \
 				lib/math/*.c lib/string/*.c lib/stdio/*.c \
 				misc/debug/*.c misc/vm/*.c \
 				mm/*.c \
+				fs/*.c \
 				)
 
 ASM_SOURCES = $(wildcard kernel/*.asm  kernel/irq/*.asm \

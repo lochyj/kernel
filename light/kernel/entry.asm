@@ -46,6 +46,7 @@ _start:
 	push esp
 	; Push the incoming mulitboot headers
 	push eax ; Header magic
+	push esp ; Stack pointer
 	push ebx ; Header pointer
 	; Disable interrupts
 	cli
