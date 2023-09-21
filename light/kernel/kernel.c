@@ -12,7 +12,9 @@
 #include "light/time/pit.h"
 
 #include "drivers/display/console.h"
-#include "drivers/display/corev2.h"
+
+#include "drivers/display/core.h"
+#include "drivers/display/window.h"
 
 #include "drivers/input/keyboard.h"
 #include "drivers/input/mouse.h"
@@ -37,36 +39,6 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t initial_stack, uint32_t 
 
 	// Text mode check
 	if(multiboot_header->framebuffer_type == 1) {
-		// It isn't a text mode.
-
-		initialise_VBE(multiboot_header);
-		gdt_install();
-		idt_init();
-		init_keyboard();
-		init_mouse();
-		set_mouse_logging(false);
-		asm volatile("sti");
-
-		window_t* green_window = create_window(100, 100, 200, 200, "Green Window");
-		rect_t green_window_background = {0, 0, 200, 200, 0x00FF00};
-		draw_rect(green_window->ctx, &green_window_background);
-
-		rect_t green_window_test = {50, 50, 100, 100, 0xFF0000};
-		draw_rect(green_window->ctx, &green_window_test);
-
-		render_window(green_window);
-
-
-		window_t* red_window = create_window(400, 100, 200, 200, "Red Window");
-		rect_t red_window_background = {0, 0, 200, 200, 0xFF0000};
-		draw_rect(red_window->ctx, &red_window_background);
-
-		rect_t red_window_test = {50, 50, 100, 100, 0x00FF00};
-		draw_rect(red_window->ctx, &red_window_test);
-
-		render_window(red_window);
-
-		draw_cursor(200, 200);
 
 		for(;;);
 
@@ -77,14 +49,14 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t initial_stack, uint32_t 
 	// I think its ok to put this here? Its useful anyways.
 	initialise_console();
 
-	printf("          _      _       _     _\n");
-	printf("    ____ | |    (_)     | |   | |  \n");
-	printf("   / __ \\| |     _  __ _| |__ | |_ \n");
-	printf("  / / _` | |    | |/ _` | '_ \\| __|\n");
-	printf(" | | (_| | |____| | (_| | | | | |_ \n");
-	printf("  \\ \\__,_|______|_|\\__, |_| |_|\__|\n");
-	printf("   \\____/           __/ |      \n");
-	printf("                   |___/\n");
+	printf("          _      _       _     _		\n");
+	printf("    ____ | |    (_)     | |   | |  		\n");
+	printf("   / __ \\| |     _  __ _| |__ | |_ 	\n");
+	printf("  / / _` | |    | |/ _` | '_ \\| __|	\n");
+	printf(" | | (_| | |____| | (_| | | | | |_ 		\n");
+	printf("  \\ \\__,_|______|_|\\__, |_| |_|\__|	\n");
+	printf("   \\____/           __/ |				\n");
+	printf("                   |___/				\n");
 
 	// print multiboot header
 
@@ -151,8 +123,6 @@ void kmain(multiboot_info_t* multiboot_header, uint32_t initial_stack, uint32_t 
 	//PANIC("Testing panic");
 	//begin_timer(100);
 	// ---
-
-
 
 	for (;;) {
 		asm volatile("nop");

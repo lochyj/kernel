@@ -4,7 +4,6 @@
             "name": "Linux",
             "includePath": [
                 "${default}",
-                "${workspaceFolder}/light/include",
                 "${workspaceFolder}/light/include/light/lib",
                 "${workspaceFolder}/light/include"
             ],

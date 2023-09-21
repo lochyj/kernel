@@ -9,6 +9,7 @@
     "C_Cpp.intelliSenseEngineFallback": "disabled",
     "C_Cpp.errorSquiggles": "enabled",
     "cSpell.words": [
+        "fbdev",
         "framebuffer",
         "userspace"
     ],

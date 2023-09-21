@@ -3,7 +3,7 @@
 # Future: $(shell find . -name '*.c')
 
 C_SOURCES = $(wildcard kernel/*.c kernel/irq/*.c kernel/time/*.c \
-				drivers/display/fb/*.c drivers/display/vga/*.c drivers/input/keyboard/*.c drivers/input/mouse/*.c \
+				drivers/display/fbdev/*.c drivers/display/vga/*.c drivers/input/keyboard/*.c drivers/input/mouse/*.c drivers/input/display/fbdev/fonts/*.c \
 				lib/math/*.c lib/string/*.c lib/stdio/*.c \
 				misc/debug/*.c misc/vm/*.c \
 				mm/*.c \
